@@ -78,9 +78,9 @@ export default {
                     </div>
                 </div>
             </li>
-            <li :class="{actionColor:1 ==  indexTab}"><img src="../assets/zjlxr2.png"   @click="selectTab(1)" alt="" width="40px" height="40px"></li>
-            <li :class="{actionColor:2 ==  indexTab}"><img src="../assets/lxr1.png" @click="selectTab(2)" alt="" width="30px" height="30px"></li>
-			<li :class="{actionColor:3 ==  indexTab}"><img src="../assets/q.png" @click="selectTab(3)" alt="" width="30px" height="30px"></li>
+            <li :class="{actionColor:1 ==  indexTab}" @click="selectTab(1)" > <i class="iconfont-chat">&#xe62d;</i> </li>
+            <li :class="{actionColor:2 ==  indexTab}" @click="selectTab(2)"><i class="iconfont-chat">&#xe600;</i></li>
+			<li :class="{actionColor:3 ==  indexTab}" @click="selectTab(3)"><i class="iconfont-chat">&#xe682;</i></li>
 		</ul>
         <div class="chat-set" title="设置">
             <i @click.stop="setShow = !setShow"><img src="../assets/liebiao.png" alt=""></i>
@@ -111,10 +111,17 @@ export default {
             line-height: 60px;
             text-align:center;
             float: left;
+            i {
+                width: 40px;
+                height: 40px;
+                font-size: 26px;
+            }
         }
     }
     .actionColor { 
-            background-color: rgba(72, 69, 69, 0.3);;
+            i {
+                color: #1dbe1a;
+            }
         }
 }
 @media screen and (min-width: 500px) {
@@ -124,10 +131,18 @@ export default {
 		width: 60px;
         height: 100%;
         li {
+            text-align: center;
             padding: 10px;
+            i {
+                font-size: 26px;
+            }
         }
         .actionColor { 
             background-color: rgba(228, 219, 219, 0.3);
+            i {
+                color: #1dbe1a;
+            }
+
         }
         .selfInfo {
             position: absolute;

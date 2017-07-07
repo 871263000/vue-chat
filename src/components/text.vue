@@ -9,7 +9,7 @@ Vue.component('messagesLog', function (resolve) {
   // 自动将编译后的代码分割成不同的块，
   // 这些块将通过 Ajax 请求自动下载。
   require(['./modalMessage'], resolve)
-})
+});
 
 
 export default {
@@ -21,7 +21,7 @@ export default {
             emShow: false,
             emojis: emojis,
             showMessageLog: false,
-            iphone: false,
+            iphoneText: false,
         };
     },
     computed: mapState({
@@ -130,17 +130,20 @@ export default {
             return flag;
         }();
         if(isMobile){
-            this.iPhone = true;
+            this.iphoneText = true;
         }
         let data = localStorage.getItem('currentSel');
-        document.addEventListener('click', (e)=> {
-            if (this.emShow) {
-                this.emShow = !this.emShow;
-            };
-            if ( this.selShow ) {
-                this.selShow = !this.selShow;
-            };
+        this.$nextTick( () => {
+            document.addEventListener('click', (e)=> {
+                if (this.emShow) {
+                    this.emShow = !this.emShow;
+                };
+                if ( this.selShow ) {
+                    this.selShow = !this.selShow;
+                };
+            });
         })
+
         if ( data != null ) {
             this.currentSel = parseInt(data);
         };
@@ -149,49 +152,50 @@ export default {
 </script>
 
 <template>
-<div class="text"  v-if="start">
-<messagesLog :show="showMessageLog" @close="showMessageLog = false" v-if="showMessageLog"></messagesLog>
-<!--  表情包 -->
-    <div class="chat-tool">
-        <div class="emoticon" v-if="emShow">
-            <ul class="emoticon-list">
-                <li @click.stop = "emojiInsert(emojiObj)" v-for="(emojiObj, index) in emojis">
-                    <img :src="'/chatStatic/emoji/'+ emojiObj.num +'@2x.png'" :title="emojiObj.name" alt="">
-                </li>
+<div class="text-box">
+    <div class="text"  v-if="start">
+    <messagesLog :show="showMessageLog" @close="showMessageLog = false" v-if="showMessageLog"></messagesLog>
+    <!--  表情包 -->
+        <div class="chat-tool">
+            <div class="emoticon" v-if="emShow">
+                <ul class="emoticon-list">
+                    <li @click.stop = "emojiInsert(emojiObj)" v-for="(emojiObj, index) in emojis">
+                        <img :src="'/chatStatic/emoji/'+ emojiObj.num +'@2x.png'" :title="emojiObj.name" alt="">
+                    </li>
+                </ul>
+            </div>
+            <ul v-if="!iphoneText">
+           <!--  // 工具  表情 -->
+                <li @click.stop="emShow = !emShow"><img src="../assets/biaoqing.png" alt=""></li>
+            <!-- 文件上传  -->
+                <li><label for="chat-file"><img src="../assets/wenjian.png" alt=""></label><input type="file" id="chat-file" style="display: none" @change="fileUpload($event)"></li>
+                <li title="聊天记录" @click="showMessageLog = true" style="float:right;margin-right: 20px;"><img src="../assets/ltjl.png" alt="聊天记录"></li>
             </ul>
         </div>
-        <ul v-if="!iPhone">
-       <!--  // 工具  表情 -->
-            <li @click.stop="emShow = true"><img src="../assets/biaoqing.png" alt=""></li>
-        <!-- 文件上传  -->
-            <li><label for="chat-file"><img src="../assets/wenjian.png" alt=""></label><input type="file" id="chat-file" style="display: none" @change="fileUpload($event)"></li>
-            <li title="聊天记录" @click="showMessageLog = true" style="float:right;margin-right: 20px;"><img src="../assets/ltjl.png" alt="聊天记录"></li>
-        </ul>
-    </div>
-    <!-- 手机表情 -->
-    <div v-if="iPhone" @click.stop="emShow = true" class="tool-emoji">
-        <img src="../assets/biaoqing.png" alt="">
-    </div>
-    <div class="textarea-box">
-        <textarea placeholder="" v-if="!iPhone" v-model="content" ref="textarea" @keydown.enter="onKeydown"></textarea>
-        <input placeholder="" v-if="iPhone" v-model="content" ref="textarea" @keydown.enter="onKeydown">
-        
-    </div>
-    <div class="send-act">
-        <div class="chat-send">
-            <!-- 手机发送图片 -->
-            <label class="mul-function" for="chat-file" v-if="!content && iPhone"></label>
+        <!-- 手机表情 -->
+        <div v-if="iphoneText" @click.stop="emShow = !emShow" class="tool-emoji">
+        </div>
+        <div class="textarea-box">
+            <textarea placeholder="" v-if="!iphoneText" v-model="content" ref="textarea" @keydown.enter="onKeydown"></textarea>
+            <input placeholder="" v-if="iphoneText" v-model="content" ref="textarea" @keydown.enter="onKeydown">
+            
+        </div>
+        <div class="send-act">
+            <div class="chat-send">
+                <!-- 手机发送图片 -->
+                <label class="mul-function" for="chat-file" v-if="!content && iphoneText"></label>
 
-            <input type="file" id="chat-file" style="display: none" v-if="iPhone" @change="fileUpload($event)">
+                <input type="file" id="chat-file" style="display: none" v-if="iphoneText" @change="fileUpload($event)">
 
-            <span class="send-btn" v-if="content || !iPhone" @click="send()">发送</span>
-            <div class="send-select-box" v-if="!iPhone" @click.stop="selShow = !selShow">
-                <span class="send-select"></span>
+                <span class="send-btn" v-if="content || !iphoneText" @click="send()">发送</span>
+                <div class="send-select-box" v-if="!iphoneText" @click.stop="selShow = !selShow">
+                    <span class="send-select"></span>
+                </div>
+                <ul class="send-select-list"  ref="ssl" v-if="selShow">
+                    <li :class="[ currentSel == 1 ? 'active': ''  ]" @click="changeSend(1)">按Enter 键发送</li>
+                    <li :class="[ currentSel == 1 ? '': 'active'  ]" @click="changeSend(0)">按Ctrl + Enter 键发送</li>
+                </ul>
             </div>
-            <ul class="send-select-list"  ref="ssl" v-if="selShow">
-                <li :class="[ currentSel == 1 ? 'active': ''  ]" @click="changeSend(1)">按Enter 键发送</li>
-                <li :class="[ currentSel == 1 ? '': 'active'  ]" @click="changeSend(0)">按Ctrl + Enter 键发送</li>
-            </ul>
         </div>
     </div>
 </div>
@@ -203,6 +207,9 @@ export default {
 
 
 @media screen and (max-width: 500px) {
+* {
+        box-sizing: border-box;
+}
 .chat-tool {
     height: 0;background-color: #fff;
     // 表情包
@@ -234,11 +241,17 @@ export default {
         width: 100%;height: 100%;
     }
 }
+.text-box {
+    height: 50px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}
 .text {
 
     overflow: hidden;
     padding: 5px 0;
-    height: 40px;
+    height: 100%;
     flex-grow: 1;
     flex-basis: 200px;
     display: flex;
@@ -246,9 +259,7 @@ export default {
     align-items: flex-start;
     position: relative;
     background-color: #ffffff;
-    position: absolute;
-    bottom: 0;
-    left: 0;
+
     .tool-emoji{
         color: #7d7e83;
         flex-basis: 40px;
@@ -262,9 +273,12 @@ export default {
         height: 100%;
         line-height: 40px;
         text-align: center;
+        background: url('../assets/biaoqing.png') center  no-repeat;
 
     }
     .textarea-box {
+        vertical-align: middle;
+        padding: 4px 0px;
         height: 100%;
         flex-grow: 1;
         flex-basis: 200px;
@@ -274,7 +288,7 @@ export default {
         border-radius: 6px;
         overflow: hidden;
         width: 200%;
-        height: 191%;
+        height: 200%;
         border: 1px solid #7d7e83;
         transform: scale(.5);
         transform-origin: 0 0;
@@ -307,7 +321,7 @@ export default {
         margin-right: 10px;
         line-height: 36px;
         text-align: center;
-        width: 27px;
+        width: 40px;
         margin-left: 5px;
         background: url('../assets/jia.png') center no-repeat;
     }
@@ -339,12 +353,14 @@ export default {
 
 .chat-tool {
     height: 32px;background-color: #fff;
+    position:relative;
     // 表情包
     .emoticon {
         position: absolute;
         bottom: 100%;
         background-color: #fff;
         box-shadow: 0 0 10px #ccc;
+        bottom: 100%;
     }
     ul{
          height: 100%;
@@ -370,11 +386,12 @@ export default {
     height: 134px;
     border-top: solid 1px #ddd;
     background-color: #fff;
+    
     .textarea-box {
         margin-left: 10px;
     }
     textarea {
-        height:  65px;
+        height:  93px;
         width: 100%;
         border: none;
         outline: none;

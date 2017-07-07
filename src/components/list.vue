@@ -21,7 +21,6 @@ export default {
         },
         mousedown (i, index, e)  {
             if ( e.which == 3 ) {
-                e.sta
                 this.mousedownShow = true;
                 console.log(e);
                 this.$nextTick( () => {
@@ -38,9 +37,6 @@ export default {
         removeZjlxr ()  {
             // console.log(this.mousedowInfo.id);
             this.$store.dispatch('delSession', this.mousedowInfo.index);
-        },
-        huadong () {
-            console.log(8899);
         }
     },
     computed: mapState({
@@ -63,12 +59,18 @@ export default {
                     result = result.concat(state.friends[i].list.filter(friend => friend.username.includes(state.filterKey)))
                 };
             }
-            
             return result;
+        },
+        searchGroup: (state) => {
+            if ( state.filterKey == "" ) {return [];};
+            let group = state.group.filter(group => group.groupname.includes(state.filterKey));
+            console.log(group);
+            return group;
         },
         indexTab: (state) => state.indexTab,
         friends: (state)=> state.friends,
         group: (state)=> state.group,
+        filterKey: (state) => state.filterKey
     }),
     created () {
         document.addEventListener('click', (e)=> {
@@ -94,22 +96,27 @@ Vue.directive('oncontextmenu', {
             <li @click="removeZjlxr()">移除该会话</li>
         </ul>
     </div>
-    <div class="search"  v-if="searchFriend.length != 0">
-         <ul>
+    <!-- 搜索 -->
+    <div class="search"  v-if="filterKey">
+         <ul  class="list-item">
             <li v-for="item in searchFriend" :class="{ active: item.id === currentId }" @click="selectSession(item.id, 'message', item.username, item.avatar)">
-                <img class="avatar"  width="30" height="30" :alt="item.username" :src="'' + item.avatar">
+                <img class="avatar"  width="40" height="40" :alt="item.username" :src="'' + item.avatar">
                 <p class="name">{{item.username}}</p>
+            </li>
+            <li v-for="g in searchGroup" @click="selectSession(g.id, 'groupMessage', g.groupname, g.avatar)">
+                 <img class="avatar"  width="40" height="40" :alt="g.groupname" :src="'' + g.avatar">
+                <p class="name">{{g.groupname}}</p>
             </li>
         </ul>
     </div>
 <!-- 最近联系人 -->
     <div v-if = "1 == indexTab" id="zjlxr-box">
 
-        <ul id="zjlxr" v-oncontextmenu ="sessions">
-        <li v-if="sessions.length <=0 " style="text-align: center;">还没有最近联系人！</li>
+        <ul id="zjlxr" v-oncontextmenu ="sessions"  class="list-item">
+            <li v-if="sessions.length <=0 " style="text-align: center;">还没有最近联系人！</li>
             <li v-for="(item, index) in sessions"
-            :class="{ active: item.id === currentId }" @click="selectSession(item.id, item.type, item.user.name, item.user.img)" v-touch:swiperight.stop ="huadong" @mousedown.3 ="mousedown(item, index, $event)">
-                <img class="avatar"  width="30" height="30" :alt="item.user.name" :src="item.user.img">
+            :class="{ active: item.id === currentId }" @click="selectSession(item.id, item.type, item.user.name, item.user.img)"  @mousedown.3 ="mousedown(item, index, $event)">
+                <img class="avatar"  width="40" height="40" :alt="item.user.name" :src="item.user.img">
                 <p class="name">{{item.user.name}}</p>
                 <span class="message-num" v-if="item.messageNum" >{{ item.messageNum }}</span>
             </li>
@@ -117,12 +124,12 @@ Vue.directive('oncontextmenu', {
     </div>
     <!-- 好友列表 -->
     <div v-if = "2 == indexTab" class="friend-list-box">
-        <ul class="friend-list">
+        <ul class="friend-list list-item">
             <li v-for="item in friends" class="">
                 <p>{{ item.groupname }}</p>
                 <ul>
                     <li v-for="list in item.list"  @click="selectSession(list.id, 'message', list.username, '' + list.avatar)" :class="{ active: list.id === currentId }">
-                        <img :src="'' + list.avatar" alt="" width="30" height="30">
+                        <img :src="'' + list.avatar" alt="" width="40" height="40">
                         <p class="name">{{ list.username }}</p>
                     </li>
                 </ul>
@@ -133,9 +140,9 @@ Vue.directive('oncontextmenu', {
     </div>
     <!-- 群 -->
     <div v-if = "3 == indexTab"  class="group-list-box">
-         <ul class="group-list">
+         <ul class="group-list list-item">
             <li v-for="item in group" class="" @click="selectSession(item.id, 'groupMessage', item.groupname, '' + item.avatar)">
-                <img class="avatar" :src="'' + item.avatar"   width="30" height="30" >
+                <img class="avatar" :src="'' + item.avatar"   width="40" height="40" >
                 <p class="name">{{ item.groupname }}</p>
             </li>
         </ul>
@@ -152,6 +159,14 @@ Vue.directive('oncontextmenu', {
         position: absolute;
         width: 100%;
         bottom: 50px;
+        .list-item {
+            position: absolute;
+            bottom: 57px;
+            top: 0;
+            width: 100%;
+            overflow: auto;
+        }
+
     }
     .search,.group-list-box, friend-list-box, #zjlxr-box{
         height: 100%;
@@ -173,7 +188,7 @@ Vue.directive('oncontextmenu', {
         }
     }
     .search { 
-        position: absolute;background-color: #fff;width: 100%;height: 530px;overflow:auto;
+        position: absolute;background-color: #fff;width: 100%;
         z-index: 1;
          &::-webkit-scrollbar{width:100px ;display: block;}
         &::-webkit-scrollbar{width:10px;height:10px}
@@ -200,8 +215,6 @@ Vue.directive('oncontextmenu', {
         }
     }
     .friend-list, .group-list, #zjlxr {
-        height: 530px;
-        overflow:auto;
         &::-webkit-scrollbar{width:100px ;display: block;}
         &::-webkit-scrollbar{width:10px;height:10px}
         &::-webkit-scrollbar-track{background:rgba(0,0,0,0)}
@@ -248,6 +261,7 @@ Vue.directive('oncontextmenu', {
     }
     .name {
         display: inline-block;
+        font-size: 2.1rem;
         margin: 0 0 0 15px;
     }
 }
@@ -265,8 +279,12 @@ Vue.directive('oncontextmenu', {
             padding-left: 15px;
         }
     }
+    .list-item {
+            height: 510px;
+            overflow: auto;
+        }
     .search { 
-        position: absolute;background-color: #2a5431;width: 220px;height: 530px;overflow:auto;
+        position: absolute;background-color: #2a5431;width: 220px;
         z-index: 1;
          &::-webkit-scrollbar{width:100px ;display: block;}
         &::-webkit-scrollbar{width:10px;height:10px}
@@ -293,8 +311,6 @@ Vue.directive('oncontextmenu', {
         }
     }
     .friend-list, .group-list, #zjlxr {
-        height: 530px;
-        overflow:auto;
         &::-webkit-scrollbar{width:100px ;display: block;}
         &::-webkit-scrollbar{width:10px;height:10px}
         &::-webkit-scrollbar-track{background:rgba(0,0,0,0)}
@@ -341,6 +357,7 @@ Vue.directive('oncontextmenu', {
     }
     .name {
         display: inline-block;
+        font-size: 2.1rem;
         margin: 0 0 0 15px;
     }
 }

@@ -2,22 +2,32 @@
 import { mapState } from 'vuex'
 import Vue from 'vue';
 import { reverse } from '../messageHandel';
+
+
 Vue.component('messagesLog', function (resolve) {
   // 这个特殊的 require 语法告诉 webpack
   // 自动将编译后的代码分割成不同的块，
   // 这些块将通过 Ajax 请求自动下载。
   require(['./modalMessage'], resolve)
 });
+
+
 Vue.component('asyncModal', function (resolve) {
   require(['./imgCat'], resolve)
-})
+});
+
+Vue.component('persInfo', function (resolve) {
+    require(['./persInfo'], resolve);
+});
+
 
 export default {
     data () {
         return {
             showMessageLog: false,
-            show: false,
+            showImg: false,
             imgfdBoxinfo: '',
+            persInfo: false,
         }
     },
     computed:  mapState({
@@ -28,7 +38,8 @@ export default {
         },
         dialogType: (state) => {
             return state.currentSessionType;
-        }
+        },
+        iPhone: (state) => state.iPhone, 
     }),
     filters: {
         // 将日期过滤为 hour:minutes
@@ -36,7 +47,7 @@ export default {
             if (typeof date === 'string') {
                 date = new Date(date);
             }
-            return date.getHours() + ':' + date.getMinutes();
+            return  date.getFullYear() + '-' + (parseInt(date.getMonth()) + 1) +'-' + date.getDate()+ ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
         }
     },
     methods: {
@@ -49,12 +60,19 @@ export default {
                 let img = '<img src="'+e.target.src+'">';
 
                 this.imgfdBoxinfo = img;
-                this.show = true;
+                this.showImg = true;
             }
         },
         clearSession () {
             this.$emit('mainShow');
             this.$store.dispatch('clearSession');
+        },
+        userInfo () {
+            if (this.dialogType == 'groupMessage' ) {
+                return false;
+            } else {
+                this.persInfo = true
+            }
         }
     }
 }
@@ -89,17 +107,26 @@ Vue.directive('scroll-bottom', function(el) {
 </script>
 
 <template>
-
-
 <div class="message">
-    <asyncModal v-if="show" @close="show = false">
+
+<!-- 个人消息 -->
+  <persInfo v-if="persInfo" @close="persInfo = false"></persInfo>
+<!-- img放大 -->
+    <asyncModal v-if="showImg" @close="showImg = false">
         <div slot="body" v-html="imgfdBoxinfo"></div>
     </asyncModal>
+<!-- 聊天信息 -->
     <messagesLog :show="showMessageLog" @close="showMessageLog = false" v-if="showMessageLog"></messagesLog>
+
+    <!-- 手机 title -->
     <div class="dialog-title" ref="chatDrop" v-chat-drop>
         <i class="backSession" @click="clearSession()"></i>
+
         <span class="text-left dialogue-title-name">{{ dialogName }}</span>
+        <!-- 个人信息 -->
+        <i class=""class="iconfont-chat man-info" @click="userInfo()" v-if="dialogName">&#xe686;</i>
     </div>
+    <!--聊天信息 -->
     <ul v-if="session" v-scroll-bottom="session.messages">
         <li v-if="session.messages.length > 20" @click="showMessageLog = true" class="catMul">查看更多</li>
         <li v-for="item in session.messages">
@@ -107,10 +134,9 @@ Vue.directive('scroll-bottom', function(el) {
                 <span>{{ item.date | time }}</span>
             </p>
             <div class="main" :class="{ self: item.self }">
-                <img class="avatar" width="30" height="30" :src="item.self ? user.img : item.img" />
+                <img class="avatar" width="40" height="40" :src="item.self ? user.img : item.img" />
                 <div v-if="dialogType == 'groupMessage' && !item.self" class="groupName">{{item.name}}</div>
-                <div class="text" @click="imgFd($event)" v-html="content(item.content)">
-                </div>
+                <div class="text" @click="imgFd($event)" v-html="content(item.content)"></div>
             </div>
         </li>
     </ul>
@@ -124,6 +150,16 @@ Vue.directive('scroll-bottom', function(el) {
         }
         .chat-file{
             text-align: center;
+            i {
+                width: 56px;
+                height: 56px;
+                display: inline-block;
+                font-size: 58px;
+                text-align: center;
+                line-height: 56px;
+                padding: 5px;
+                color: #000;
+            }
         }
         .main {
             p{
@@ -160,6 +196,16 @@ Vue.directive('scroll-bottom', function(el) {
         height:45px;
         line-height: 45px;
         background: url('../assets/xyjt.png') center no-repeat;
+    }
+    .man-info {
+        position: absolute;
+        top: 0;
+        right: 10px;
+        display: inline-block;
+        width:32px;
+        height:45px;
+        line-height: 45px;
+        font-size: 26px;
     }
 }
 .message {
@@ -224,15 +270,16 @@ Vue.directive('scroll-bottom', function(el) {
     .text {
         display: inline-block;
         position: relative;
-        padding: 0 10px;
+        padding: 5px 10px;
         max-width: ~'calc(100% - 80px)';
         min-height: 30px;
-        line-height: 2.5;
-        font-size: 1rem;
+        font-size: 2.1rem;
         text-align: left;
         word-break: break-all;
         background-color: #fafafa;
         border-radius: 4px;
+        line-height: 1.5;
+        font-family:Tahoma,Arial,Roboto,"Droid Sans","Helvetica Neue","Droid Sans Fallback","Heiti SC",sans-self;
         &:before {
             content: " ";
             position: absolute;
@@ -286,6 +333,16 @@ Vue.directive('scroll-bottom', function(el) {
         color: #082f84;
     }
     .backSession{ display: none; }
+    .man-info {
+        position: absolute;
+        top: 0;
+        right: 40px;
+        display: inline-block;
+        width:32px;
+        height:45px;
+        line-height: 45px;
+        font-size: 26px;
+    }
     padding: 10px 15px;
     .groupName {
         color: #908f8f;
@@ -336,8 +393,8 @@ Vue.directive('scroll-bottom', function(el) {
         padding: 0 10px;
         max-width: ~'calc(100% - 80px)';
         min-height: 30px;
-        line-height: 2.5;
-        font-size: 12px;
+        line-height: 2.0;
+        font-size: 16px;
         text-align: left;
         word-break: break-all;
         background-color: #fafafa;

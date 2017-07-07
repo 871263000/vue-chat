@@ -51,11 +51,23 @@ const store = new Vuex.Store({
         userSet: {
             voice: 0,
             desktop: 0
-        }
+        },
+        iPhone: false,
     },
     mutations: {
         INIT_DATA (state, initData) {
-
+            let isMobile = function(){
+                let userAgentInfo = navigator.userAgent;
+                let Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod")
+                let flag = false;
+                for (let v = 0; v < Agents.length; v++) {
+                    if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = true; break; }
+                };
+                return flag;
+            }();
+            if(isMobile){
+                state.iPhone = true;
+            }
             state.user.id = initData.data.mine.id;
             state.user.name= initData.data.mine.username;
             state.user.img= initData.data.mine.avatar ? initData.data.mine.avatar : '/chat/images/niming.png';
@@ -78,6 +90,7 @@ const store = new Vuex.Store({
             // console.log(data)
             let saveMessage = {};
             let session = sessions.find(item => parseInt(item.id) === parseInt(data.dialogueId) && item.type === data.type );
+            
             data.content = reverse(data.content);
             if ( data.senderId == user.id  ) {
                 saveMessage = {
@@ -106,9 +119,19 @@ const store = new Vuex.Store({
                     session.messages.shift();
                 };
                 session.messages.push(saveMessage);
+                // 消息置顶
+                let index = 0;
+                for (let i in sessions  ) {
+                    if ( parseInt(sessions[i].id) === parseInt(data.dialogueId) && sessions[i].type === data.type ) {
+                        index = i;
+                        break;
+                    }
+                }
+                if ( index != 0 ) {
+                    sessions.unshift(sessions.splice(index, 1)[0]);
+                }
                  // 会话列表里没有
             } else {
-
                 session = {
                     id: data.dialogueId,
                     user: {   
@@ -207,13 +230,14 @@ const store = new Vuex.Store({
             };
             Websocket.sendMessage(sendMessage);
         },
-
+        // 后台发来的未读消息，
         acceptMes: ({ commit, state }, data) => {
             let saveData;
             let name, sessionId,sessionName,img, sessionImg;
             if ( data ) {
                 data.forEach(function ( d ) {
-                    // console.log(d);
+
+                    // return;
                     if ( d.message_type == 'message' ) {
                         sessionName = d.sender_name;
                         name = d.sender_name;
@@ -227,6 +251,18 @@ const store = new Vuex.Store({
                         name = d.sender_name;
                         sessionId = d.session_no;
                     }
+                    // state.sessions.forEach(function () {
+                    //     console.log(33);
+                    // });
+                    // let session = state.sessions;
+                    // 是否存在这个消息
+                    let session = state.sessions.find(item => parseInt(item.id) === parseInt(sessionId) && item.type === d.message_type );
+                    if ( session ) {
+                        let sessionSave = session.messages.find(item=>parseInt(item.id) === parseInt(d.id));
+                        if (sessionSave) {
+                            return false;
+                        }
+                    }
                     saveData = {
                         id: d.id,
                         content: d.message_content,
@@ -239,7 +275,6 @@ const store = new Vuex.Store({
                         type: d.message_type
 
                     };
-                    // console.log(saveData);
                     commit('SEND_MESSAGE', saveData);
                     // console.log(saveData);
                 });

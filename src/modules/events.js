@@ -11,6 +11,7 @@ let voice = function() {
 
 const state = {
   complete: false,
+  onlineMan: 0,
 }
 
 const getters = {
@@ -19,21 +20,34 @@ const getters = {
 
 const mutations = {
 	SELF_LOGIN (state, data) {
+		for (let i in data) {
+			state.onlineMan ++;
+		}
+		// 去除自己
+		state.onlineMan --;
 		state.complete = true;
 	},
-	LOGIN (data) {
-		console.log(data);
+	LOGIN (state) {
+		state.onlineMan ++;
 	},
 	SAYUID ( state, data) {
 		console.log(data);
+	},
+	LOGOUT (state) {
+		state.onlineMan --;
 	}
 }
 const actions = {
 	selfLogin: ({ state, commit }, data)=> {
-		commit('SELF_LOGIN', data);
+
+		commit('SELF_LOGIN', data.data.client_list);
 	},
-	login: (data) => {
+	login: ({ state, commit }, data) => {
+		commit('LOGIN');
 		return false;
+	},
+	logout: ({ state, commit }, data) => {
+		commit('LOGOUT');
 	},
 	ping: (data)=> {
 
@@ -79,7 +93,6 @@ const actions = {
 
 	},
 	resSayUid: ({ state, commit, rootState }, data) => {
-		// console.log(rootState.currentSession.img);return false;
 		let sessionImg, sessionName, name, img;
 		if ( data.mestype == 'message' ) {
 			sessionName = rootState.currentSession.name;

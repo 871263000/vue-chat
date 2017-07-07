@@ -30,7 +30,7 @@ export const reverse = function ( content ) {
         if ( i == 'img' ) {
             m = '<img style="max-width: 300px;" class="chat-img" src="'+zArr[1]+'" alt="'+zArr[0]+'" />';
         } else {
-          m = '<div class="chat-file"><a title="'+zArr[0]+'" href="'+zArr[1]+'" download target="_blank"><i><img src="/images/xiazaiwenjian.png" alt="" /></i><p title="'+zArr[0]+'">'+zArr[0]+'</p></a></div>';
+          m = '<div class="chat-file"><a title="'+zArr[0]+'" href="'+zArr[1]+'" download target="_blank"><i class="iconfont-chat">&#xe662;</i><p title="'+zArr[0]+'">'+zArr[0]+'</p></a></div>';
         }
       };
       return m;

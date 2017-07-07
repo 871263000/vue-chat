@@ -21,25 +21,34 @@
                 <card></card>
                 <list @mainShow="mainShow = false"></list>
             </div>
-
+            <div class="">
+                
+            </div>
             <div class="main" v-if="!mainShow">
                 <div class="windowList" v-if="!iPhone">
                     <ul>
                         <li title="按[esc]键最小化 " @click.stop="chatMainShow = !chatMainShow">X</li>
                     </ul>
                 </div>
+
                 <message @mainShow="mainShow = true"></message>
                 <TextAre></TextAre>
             </div>
+              <!--  隐藏聊天 -->
+            <div class="dialog-title" v-if="mainShow">
+                <i class="backSession" @click.stop="chatMainShow = false"></i>
+                <span class="text-left dialogue-title-name">聊天</span>
+            </div>
         </div>
-    </transition>  
+    </transition>
+    
 </div>
 
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import Vue from 'vue'
+import { mapState } from 'vuex'
 import vueR from 'vue-resource'
 
 import Card from './components/card'
@@ -48,7 +57,7 @@ import List from './components/list'
 import TextAre from './components/text'
 import Message from './components/message'
 
-
+require('./assets/css/aliIcon.css');
 // const Loadmore = require('vue-loadmore').default;
 Vue.use(vueR);
 
@@ -74,7 +83,7 @@ export default {
             mainShow: false,
         }
     },
-    created () {
+    mounted () {
         let isMobile = function(){
             let userAgentInfo = navigator.userAgent;
             let Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod")
@@ -94,36 +103,33 @@ export default {
             };
         }
         // 请求人员信息
-        this.$http.get('/omsIm/demo/json/getList.php')
+        this.$http.get('/static/omsIm/demo/json/json.js')
             .then((response) => {
                 this.$store.dispatch('initData', response.data);
+                // 请求消息数量
+                this.$http.get('/static/omsIm/demo/json/jsonMessage.js?class=mesNum')
+                    .then((response) => {
+                        this.$store.dispatch('acceptMes', response.data.reverse());
+                    })
+                    .catch(function(response) {
+                        console.log(response)
+                    });
             })
             .catch(function(response) {
                 console.log(response)
             });
-        // 请求消息数量
-        this.$http.get('/omsIm/demo/json/getList.php?class=mesNum')
-            .then((response) => {
-                this.$store.dispatch('acceptMes', response.data);
-            })
-            .catch(function(response) {
-                console.log(response)
-            });
+        
     },
     methods: {
         transf () {
 
         }
     },
-    mounted () {
-        
-
-    }
 }
 
 </script>
 
-<style lang="less" >
+<style lang="less">
 body, html {
     height: 100%;
     overflow: hidden;
@@ -169,6 +175,17 @@ img{
         bottom: 28px;
         right:28px;
     }
+    .mesNum{
+        position: absolute;
+        text-align:center;
+        line-height: 26px;
+        top: -9px;right: -13px;
+        background-color: #ca4646;
+        color: #fff;
+        border-radius: 13px;
+        width:26px;
+        height:26px;
+    }
     .term{
         width: 100%;
         height: 60px;
@@ -178,10 +195,11 @@ img{
         background-color: #f9f9f9;
         bottom: 0;
         left: 0;
+        border-top: 1px solid #ccc;
     }
     .sidebar{
         position: absolute;
-        top: 0;
+        top: 46px;
         left: 0;
         width: 100%;
         height: 100%;
@@ -195,6 +213,30 @@ img{
         left: 0;
         z-index: 999;
         background-color: #efeff4;
+    }
+    .dialog-title {
+        height: 45px;
+        border-bottom: 1px solid #ccc;
+        cursor: move;
+        background-color: rgb(48, 48, 54);
+        color: #fff;
+        text-align: center;
+        .dialogue-title-name {
+            height: 100%;
+            line-height: 45px;
+            font-size: 20px;
+            display: inline-block;
+        }
+        .backSession {
+            position: absolute;
+            top: 0;
+            left: 10px;
+            display: inline-block;
+            width:32px;
+            height:45px;
+            line-height: 45px;
+            background: url('assets/xyjt.png') center no-repeat;
+        }
     }
     .mask {
         background-color: rgba(255,255,255,0.8);
@@ -302,7 +344,7 @@ img{
         float: left;
         width: 220px;
         color: #f4f4f4;
-        background-color:#2a5431;
+        background-color:#38354a;
     }
     .main {
         border: 1px solid #ccc;
