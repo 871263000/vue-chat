@@ -2,7 +2,11 @@
 <transition name="modal">
 	<div class="modal-mask">
       	<div class="modal-wrapper">
-        	<div class="modal-container">
+        	<div class="modal-container" @click.stop=''>
+              <div class="model-close">
+                <span  @click="$emit('close')">X</span>
+              </div>
+              <div class="modal-container-box">
           			<div class="modal-header">
             			<slot name="header">
               				
@@ -14,8 +18,9 @@
 	            	</slot>
           		</div>
 	          	<div class="modal-footer">
-              		<button class="modal-default-button" @click="$emit('close')">取消</button>
+              		<!-- <button class="modal-default-button">取消</button> -->
 	          	</div>
+            </div>
         	</div>
       	</div>
     </div>
@@ -26,7 +31,7 @@
 
 .modal-mask {
   position: fixed;
-  z-index: 99999;
+  z-index: 9999999999;
   top: 0;
   left: 0;
   width: 100%;
@@ -47,7 +52,7 @@
   width: 100%;
   height: 100%;
   margin: 0px auto;
-  background-color: #fff;
+  background-color: #eee;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
   transition: all .3s ease;
@@ -59,6 +64,18 @@
   padding: 10px;
 
 }
+.model-close {
+    position: relative;
+    height: 32px;
+    span {
+      cursor: pointer;
+      padding: 10px;
+      position: absolute;
+      top: 0px;
+      right: 6px;
+      font-size: 18px;
+    }
+  }
 .modal-footer {
   text-align: center;
   position: absolute;
@@ -74,8 +91,9 @@
   margin: 20px 0;
   position: absolute;
   bottom: 20px;
-  top: 20px;
+  top: 53px;
   width: 100%;
+  padding: 0;
 }
 
 .modal-default-button {
@@ -129,7 +147,7 @@
 @media screen and (min-width: 500px) {
 .modal-mask {
   position: fixed;
-  z-index: 9998;
+  z-index: 999991;
   top: 0;
   left: 0;
   width: 100%;
@@ -150,13 +168,30 @@
   width: 100%;
   margin: 0px auto;
   padding: 20px 30px;
-  background-color: #fff;
+  background-color: #eee;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
   transition: all .3s ease;
   font-family: Helvetica, Arial, sans-serif;
+  .modal-container-box {
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+  }
+  .model-close {
+    position: relative;
+    span {
+      cursor: pointer;
+      padding: 10px;
+      position: absolute;
+      top: -22px;
+      right: -23px;
+      font-size: 18px;
+    }
+  }
 }
 .modal-header{
+  padding: 0;
   text-align: center;
   font-size: 18px;
 }
@@ -169,6 +204,7 @@
 }
 
 .modal-body {
+  padding: 0;
   margin: 20px 0;
 }
 

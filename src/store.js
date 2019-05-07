@@ -8,23 +8,29 @@ import Websocket from './Websocket';
 import { reverse } from './messageHandel';
 import messageHandle from './messageHandel';
 import  events from './modules/events';
-
+import  video from './modules/video';
+import axios from 'axios'
 
 Vue.use(Vuex);
-
+// Vue.prototype.$http = axios
+axios.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 const now = new Date();
+
+let chatFind = function (callback) {
+
+}
 const store = new Vuex.Store({
     state: {
         // 当前用户
         user: {},
         friends: [
-            { 
-                "groupname": "全员", 
+            {
+                "groupname": "全员",
                 "id": 1,
                 'list': []
-            }, 
-            { 
-                "groupname" : "好友", 
+            },
+            {
+                "groupname" : "好友",
                 "id": 2,
                 'list': [
 
@@ -38,10 +44,17 @@ const store = new Vuex.Store({
         indexTab: 1,
         // 当前选中的会话
         currentSession: {
-            id: '',
+            id: null,
             name: '',
-            img: ''
+            img: '',
+            type: 'message'
 
+        },
+        connectType: 200,
+        sendType: 0,
+        sendStatus: {
+            sendType: 0,
+            sendContent: {},
         },
                 // 当前选中的会话 类型
         currentSessionType: 'message',
@@ -53,76 +66,135 @@ const store = new Vuex.Store({
             desktop: 0
         },
         iPhone: false,
+        isPhone: true,
+        videoResAnswerCallBack: function () {
+
+        }
     },
     mutations: {
         INIT_DATA (state, initData) {
-            let isMobile = function(){
-                let userAgentInfo = navigator.userAgent;
-                let Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod")
-                let flag = false;
-                for (let v = 0; v < Agents.length; v++) {
-                    if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = true; break; }
-                };
-                return flag;
-            }();
-            if(isMobile){
-                state.iPhone = true;
-            }
+            // let isMobile = function(){
+            //     let userAgentInfo = navigator.userAgent;
+            //     let Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod")
+            //     let flag = false;
+            //     for (let v = 0; v < Agents.length; v++) {
+            //         if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = true; break; }
+            //     };
+            //     return flag;
+            // }();
+
+            // if(isMobile){
+            //     state.iPhone = true;
+            // }
             state.user.id = initData.data.mine.id;
             state.user.name= initData.data.mine.username;
-            state.user.img= initData.data.mine.avatar ? initData.data.mine.avatar : '/chat/images/niming.png';
+            state.user.omsId= initData.data.mine.oms_id;
+            state.user.documentUrlOms= initData.data.mine.documentUrlOms;
+            state.isPhone= initData.data.mine.isPhone;
+            state.user.img= initData.data.mine.avatar ? initData.data.mine.avatar : initData.data.documentUrlOms + '/chat/images/niming.png';
             state.friends= initData.data.friend;
             state.group= initData.data.group;
 
 
-            let data = localStorage.getItem('vue-chat-session');
+            let data = localStorage.getItem('vue-chat-session' + state.user.id );
             let userSet = localStorage.getItem('chat-set');
+            let dataJson = [];
+            let omsGroup = 'all' + state.user.omsId;
             if (data) {
-                state.sessions = JSON.parse(data);
+                dataJson = JSON.parse(data);
+                // 删除原有的群
+                dataJson.forEach((item, index)=>{
+                    if ( item.id == 'all' ) {
+                        dataJson.splice(index, 1);
+                    }
+                })
+                if ( !dataJson.find(item=>item.id == omsGroup ) ) {
+                    let date = new Date();
+                    dataJson.unshift({id: omsGroup, user: {name: '全员群', img: '/chat/images/ren.png'}, messageNum: 0, type: 'groupMessage', 'messages': [{"id":"5057","content":"所有人的群", img: '/chat/images/ren.png',name: '系统', date: date}]});
+                }
+            } else {
+                let date = new Date();
+                dataJson.push({id: omsGroup, user: {name: '全员群', img: '/chat/images/ren.png'}, messageNum: 0, type: 'groupMessage', 'messages': [{"id":"5057","content":"所有人的群",img: '/chat/images/ren.png',name: '系统', date: date}]});
             }
+            state.sessions = dataJson;
             if ( userSet ) {
                 // console.log(userSet);
                 state.userSet = JSON.parse(userSet);
             };
         },
         // 收到消息
-        SEND_MESSAGE ({sessions, currentSession, user, friends, currentSessionType }, data) {
-            // console.log(data)
+        SEND_MESSAGE ({sessions, currentSession, user, friends, currentSessionType, group }, data) {
+            // 消息对方没有接受
+            if (data.code == 0) {
+                if ( data.type == 'groupMessage' ) {
+                    sessions.forEach((item, index)=> {
+                        if ( item.id == data.dialogueId ) {
+                            sessions.splice(index, 1);
+                        }
+                    })
+                }
+                alert(data.msg);
+                return false;
+            }
             let saveMessage = {};
-            let session = sessions.find(item => parseInt(item.id) === parseInt(data.dialogueId) && item.type === data.type );
-            
-            data.content = reverse(data.content);
+            let session = sessions.find(item => item.id == data.dialogueId && item.type === data.type );
+            // data.content = reverse(data.content);
             if ( data.senderId == user.id  ) {
                 saveMessage = {
                     id: data.id,
                     content: data.content,
                     date: new Date(),
-                    self: true
+                    self: true,
+                    accept_id: data.accept_id,
+                    revokeState: data.revokeState,
+                    mesages_types: data.mesages_types
                 }
             } else {
+                let date = '';
+                if ( data.date ) {
+                    date = new Date(data.date*1000);
+                }
                 saveMessage = {
                     id: data.id,
-                    name: data.name, 
-                    img: data.img,
                     content: data.content,
-                    date: new Date()
+                    date: date || new Date(),
+                    accept_id: data.accept_id,
+                    revokeState: data.revokeState,
+                    mesages_types: data.mesages_types
                 }
+
             }
+
             // 会话列表里有
             if ( session ) {
+
                 // 发送者 和 聊天人 不是同一人
-                if ( data.dialogueId != currentSession.id ) {
+                if ( data.dialogueId != currentSession.id && data.senderId != user.id ) {
                     session.messageNum++;
                 };
-                // 消息只能保存十条
+                // 消息只能保存二十条
                 if ( session.messages.length > 20 ) {
                     session.messages.shift();
                 };
+
+                saveMessage.img = session.user.img;
+                saveMessage.name = session.user.name;
+                if ( data.type == 'groupMessage' ) {
+                    let f;
+                    let fringd1 = friends[1].list.find((items) => items.id == data.senderId);
+                    if ( !fringd1 ) {
+                        f = friends[2].list.find((items) => items.id == data.senderId);
+                    } else {
+                        f = fringd1;
+                    }
+                    saveMessage.name = f.username;
+                    saveMessage.img = f.avatar;
+                }
                 session.messages.push(saveMessage);
                 // 消息置顶
                 let index = 0;
                 for (let i in sessions  ) {
-                    if ( parseInt(sessions[i].id) === parseInt(data.dialogueId) && sessions[i].type === data.type ) {
+                    if ( sessions[i].id == data.dialogueId && sessions[i].type === data.type ) {
                         index = i;
                         break;
                     }
@@ -132,17 +204,54 @@ const store = new Vuex.Store({
                 }
                  // 会话列表里没有
             } else {
+
+                let fg = {}; // 找到这个 id 对应的 信息
+                if ( data.type != 'groupMessage' ) {
+                    if ( data.sessionId == "sysNotice" ) {
+                        fg = {'name': '系统通知', 'avatar': '/images/sysNotice.png'}
+                        saveMessage.name = fg.username;
+                        saveMessage.img = fg.avatar;
+
+                    } else {
+                        let fringd1 = friends[1].list.find((items) => items.id == data.dialogueId);
+                        if ( !fringd1 ) {
+                            fg = friends[2].list.find((items) => items.id == data.dialogueId);
+                        } else {
+                            fg = fringd1;
+                        }
+
+                        fg.name = fg.username;
+                        saveMessage.name = fg.username;
+                        saveMessage.img = fg.avatar;
+                    }
+
+                } else {
+                    let f = '';
+                    fg = group.find(items => items.id == data.dialogueId);
+                    fg.name = fg.groupname;
+
+                    let fringd1 = friends[1].list.find((items) => items.id == data.senderId);
+                    if ( !fringd1 ) {
+                        f = friends[2].list.find((items) => items.id == data.senderId);
+                    } else {
+                        f = fringd1;
+                    }
+
+                    saveMessage.name = f.username;
+                    saveMessage.img = f.avatar;
+
+                }
                 session = {
                     id: data.dialogueId,
-                    user: {   
-                        name: data.sessionName, 
-                        img: data.sessionImg
+                    user: {
+                        name: fg.name,
+                        img: fg.avatar
                     },
                     messageNum: 0,
                     type: data.type,
                     messages: []
                 }
-                if ( data.dialogueId != currentSession.id ) {
+                if ( data.dialogueId != currentSession.id  && data.senderId != user.id) {
                     session.messageNum++;
                 };
                 session.messages.push(saveMessage);
@@ -153,10 +262,14 @@ const store = new Vuex.Store({
             // };
 
         },
+        MES_CLOSE ({state, sessions}, data) {
+            let session = sessions.find(item => item.id == data.session_no && item.type === data.message_type );
+            session.messageNum = 0;
+        },
         // 选择会话
         SELECT_SESSION (state, data) {
 
-            let session = state.sessions.find(item => parseInt(item.id) === parseInt(data.id) && item.type == data.type);
+            let session = state.sessions.find(item => item.id == data.id && item.type == data.type);
             // 服务器端消除消息
             if ( session && session.messageNum != 0 ) {
                 Websocket.sendMessage({"type":"mes_close", "to_uid":data.id,  "session_no": data.id, "message_type": data.type});
@@ -164,9 +277,11 @@ const store = new Vuex.Store({
             if ( session && session.messageNum != 0 ) {
                 session.messageNum = 0;
             };
+            console.log(data);
             state.currentSession.id = data.id;
             state.currentSession.name = data.name;
             state.currentSession.img = data.img;
+            state.currentSession.type = data.type;
             state.currentSessionType = data.type;
         } ,
         // 后台接受的未读消息
@@ -175,6 +290,13 @@ const store = new Vuex.Store({
         // },
         DELSESSION (state, index) {
             state.sessions.splice(index,1);
+        },
+        SIGNREADED (state, data) {
+            if ( data.num ) {
+                state.sessions[data.index].messageNum = 0;
+            } else {
+                state.sessions[data.index].messageNum = 1;
+            }
         },
         // 选择 tab
         SELECT_TAB (state, index) {
@@ -193,6 +315,55 @@ const store = new Vuex.Store({
             state.currentSession.id = '';
             state.currentSession.name = '';
             state.currentSession.img = '';
+            state.currentSession.type = '';
+
+        },
+        FRIEND_DEL (state, uid) {
+            for (let i in state.friends[0].list) {
+                if ( state.friends[0].list[i].id == uid ) {
+                    state.friends[0].list.splice(i, 1);
+                    break;
+                }
+            }
+        },
+        FRIENDS_STATE_CHANGE (state, uid) {
+            for (let i in state.friends[0].list) {
+                if ( state.friends[0].list[i].id == uid ) {
+                    state.friends[0].list[i].state = 0;
+                    break;
+                }
+            }
+        },
+        REVOKE_SEND (state, messageId) {
+            let sendMessage = {'type': 'revoke', 'messageId': messageId};
+            Websocket.sendMessage(sendMessage);
+        },
+        REVOKE (state, data) {
+           state.sessions.forEach((items, i) => {
+                let find = false;
+                items.messages.forEach((item, y) => {
+                    if ( item.id == data.message_id ) {
+                        console.log(item);
+                        find = true;
+                        item.content = '已撤销';
+                        item.revokeState = 1;
+                        return ;
+                    }
+                });
+                if ( find ) {
+                    return ;
+                }
+            });
+        },
+        CONNECT_TYPE_CHANGE (state, data) {
+            state.connectType = data;
+        },
+        SEND_STSTUS_CHANGE (state, data) {
+            state.sendStatus.sendType = data.sendType;
+            state.sendStatus.sendContent = data.sendContent;
+        },
+        RESEND (state) {
+            state.sendStatus.sendType = 0;
         }
         // 加载完成
         // COMPLETE (state, tf) {
@@ -200,19 +371,50 @@ const store = new Vuex.Store({
         // }
     },
     actions: {
-        initData: ({ commit, dispatch }, initData) => { 
+        initData: ({ commit, dispatch, state }, initData) => {
              Websocket.on('open', function () {
-                Websocket.sendMessage({"type": 'login', oms_id: initData.data.mine.oms_id, uid: initData.data.mine.id, header_img_url: initData.data.mine.avatar, token: initData.data.mine.token, client_name: initData.data.mine.username, room_id: initData.data.mine.oms_id });
+                commit('CONNECT_TYPE_CHANGE', 200);
+
+                Websocket.sendMessage({"type": 'login', 'platform': 'web', oms_id: initData.data.mine.oms_id, uid: initData.data.mine.id, header_img_url: initData.data.mine.avatar, token: initData.data.mine.token, client_name: initData.data.mine.username, room_id: initData.data.mine.oms_id });
             });
             Websocket.on('comeMessage', function (data) {
                 let type = data.type;
                 dispatch(type, data);
+            });
+            Websocket.on('close', function (data) {
+                commit('CONNECT_TYPE_CHANGE', 204);
+            });
+            Websocket.on('error', function (data) {
+                commit('CONNECT_TYPE_CHANGE', 204);
+                // Websocket.connect();
+            });
+            Websocket.connect();
+            commit('INIT_DATA', initData);
+
+        },
+        PhInitData: ({ commit, dispatch, state }, initData) => {
+             Websocket.on('open', function () {
+                commit('CONNECT_TYPE_CHANGE', 200);
+
+                Websocket.sendMessage({"type": 'login', 'platform': 'web', oms_id: initData.data.mine.oms_id, uid: initData.data.mine.id, header_img_url: initData.data.mine.avatar, token: initData.data.mine.token, client_name: initData.data.mine.username, room_id: initData.data.mine.oms_id });
+            });
+            Websocket.on('comeMessage', function (data) {
+                let type = data.type;
+                dispatch(type, data);
+            });
+            Websocket.on('close', function (data) {
+                commit('CONNECT_TYPE_CHANGE', 204);
+            });
+            Websocket.on('error', function (data) {
+                commit('CONNECT_TYPE_CHANGE', 204);
+                // Websocket.connect();
             });
             Websocket.connect();
             commit('INIT_DATA', initData);
 
         },
         sendMessage: ({ commit, state }, data) => {
+            let call;
             let sendMessage = {};
             let content = '';
             data.dialogueId = state.currentSession.id;
@@ -222,33 +424,83 @@ const store = new Vuex.Store({
             data.img = state.currentSession.img;
             data.type = state.currentSessionType;
             data.content = messageHandle(data.content);
+            // 转换内容
+            sendMessage = {
+                type:"sayUid",
+                to_uid: state.currentSession.id,
+                groupId: 0,
+                accept_name: state.currentSession.name,
+                message_type: state.currentSessionType,
+                mes_types: data.messageType,
+                content: data.content
+            };
 
-            // 转换内容 
-            sendMessage = {type:"sayUid", to_uid: state.currentSession.id, groupId: 0, accept_name: state.currentSession.name, message_type: state.currentSessionType, mes_types: 'text', content: data.content  };
             if ( state.currentSessionType != 'message'  ) {
                 sendMessage.session_no = state.currentSession.id;
+            };
+            if ( state.connectType == 204 ) {
+                let r = {status: 0, "msg": '断开链接！'};
+                // if (  state.connectType == 204 ) {
+                //     r.msg = "网络错误！";
+                // }
+                if ( !data.count ) {
+                    data.count = 0;
+                }
+                Websocket.connect();
+                commit('SEND_STSTUS_CHANGE', {sendType: 1, sendContent: sendMessage});
+                // if ( data.count < 10 ) {
+                //     return call = new Promise((resolve, reject) => {
+                //         resolve({status: 0, msg: '断开链接！', count: 0});
+                //     })
+                // }
+                return call = new Promise((resolve, reject) => {
+                    resolve(r);
+                })
+            } else if ( state.connectType == 200  ) {
+
+                Websocket.sendMessage(sendMessage);
+                return call = new Promise((resolve, reject) => {
+                    resolve({status: 1, msg: 'success'});
+                })
+            }
+
+
+        },
+        videoRes: ({commit, state}, data) => {
+            Websocket.sendMessage({'type': 'videoChat', to_uid: state.currentSession.id});
+        },
+        videoResAnswerIng: ({state}, data) => {
+            Websocket.sendMessage({'type': 'videoResAnswer', to_uid: data.to_uid, token: data.token });
+        },
+         batchSendMessage: ({ commit, state }, data) => {
+            let sendMessage;
+
+            // 转换内容
+            sendMessage = {
+                type:"sayUid",
+                to_uid: data.id,
+                groupId: 0,
+                accept_name: data.name,
+                message_type: data.type,
+                mes_types: data.messageType,
+                content: data.content  };
+            if ( data.type != 'message'  ) {
+                sendMessage.session_no = data.id;
             };
             Websocket.sendMessage(sendMessage);
         },
         // 后台发来的未读消息，
         acceptMes: ({ commit, state }, data) => {
             let saveData;
+
             let name, sessionId,sessionName,img, sessionImg;
             if ( data ) {
-                data.forEach(function ( d ) {
 
+                data.forEach(function ( d ) {
                     // return;
                     if ( d.message_type == 'message' ) {
-                        sessionName = d.sender_name;
-                        name = d.sender_name;
-                        img =  d.chat_header_img,
-                        sessionImg = d.chat_header_img,
                         sessionId = d.sender_id;
                     } else {
-                        img = d.chat_header_img,
-                        sessionImg =  '/chat/images/ren.png',
-                        sessionName = d.accept_name;
-                        name = d.sender_name;
                         sessionId = d.session_no;
                     }
                     // state.sessions.forEach(function () {
@@ -256,10 +508,12 @@ const store = new Vuex.Store({
                     // });
                     // let session = state.sessions;
                     // 是否存在这个消息
-                    let session = state.sessions.find(item => parseInt(item.id) === parseInt(sessionId) && item.type === d.message_type );
+
+                    let session = state.sessions.find(item => item.id == sessionId && item.type === d.message_type );
                     if ( session ) {
-                        let sessionSave = session.messages.find(item=>parseInt(item.id) === parseInt(d.id));
+                        let sessionSave = session.messages.find(item=>item.id == d.id);
                         if (sessionSave) {
+                            sessionSave.revokeState = d.revokeState;
                             return false;
                         }
                     }
@@ -267,14 +521,17 @@ const store = new Vuex.Store({
                         id: d.id,
                         content: d.message_content,
                         senderId: d.sender_id,
+                        sessionId: d.session_no,
                         dialogueId: sessionId,
-                        name: name,
-                        sessionName: sessionName,
-                        sessionImg: sessionImg,
-                        img: img,
-                        type: d.message_type
+                        type: d.message_type,
+                        date: d.create_time,
+                        accept_id: d.accept_id,
+                        revokeState: d.revokeState,
+                        acceptMode: 'h',
+                        mesages_types: d.mesages_types
 
                     };
+                    saveData.code = 1;
                     commit('SEND_MESSAGE', saveData);
                     // console.log(saveData);
                 });
@@ -287,25 +544,46 @@ const store = new Vuex.Store({
         delSession: ({ commit }, index) => {
             commit('DELSESSION', index);
         },
+        signReaded: ({ commit }, data) => {
+            commit('SIGNREADED', data);
+        },
         selectTab: ({ commit }, id) => commit('SELECT_TAB', id),
         search: ({ commit }, value) => commit('SET_FILTER_KEY', value),
         userSet: ({commit}, key, value) => commit('USER_SET', key, value),
-        clearSession: ({commit}) => commit('CLEAR_SESSION')
+        clearSession: ({commit}) => commit('CLEAR_SESSION'),
+        friendDel: ({commit}, uid) => commit('FRIEND_DEL', uid),
+        friendsStateChange: ({commit}, uid) => commit('FRIENDS_STATE_CHANGE', uid),
+        revokeSend: ({commit}, messageId) => commit('REVOKE_SEND', messageId)
     },
     modules: {
-        events
+        events,
+        video
     }
 });
 
 store.watch(
     (state) => state.sessions,
     (val) => {
-        localStorage.setItem('vue-chat-session', JSON.stringify(val));
+        let uid = store.state.user.id;
+        localStorage.setItem('vue-chat-session' + uid , JSON.stringify(val));
     },
     {
         deep: true
     }
 );
-
+store.watch(
+    (state) => state.currentSession,
+    (val) => {
+        let id = val.id;
+        if (!id) {
+            id = 0;
+        }
+        let send = {'type': 'selectSession', 'dialogueId': id};
+        Websocket.sendMessage(send);
+    },
+    {
+        deep: true
+    }
+);
 
 export default store;

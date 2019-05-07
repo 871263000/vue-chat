@@ -38,6 +38,7 @@ qiniu.prototype.Qiniu_upload = function( option, callback ) {
 		f: '',
 		QiniuUrl: '',
 	};
+	var _this = this;
 	this.getQiniuToken(option.tokenurl, function (token) {
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', option.QiniuUrl, true);
@@ -48,26 +49,29 @@ qiniu.prototype.Qiniu_upload = function( option, callback ) {
 		formData.append('token', token);
 		formData.append('file', option.f);
 		var taking;
-		// xhr.upload.addEventListener("progress", function(evt) {
-		// 	if (evt.lengthComputable) {
-		// 		var nowDate = new Date().getTime();
-		// 		taking = nowDate - startDate;
-		// 		var x = (evt.loaded) / 1024;
-		// 		var y = taking / 1000;
-		// 		// var uploadSpeed = (x / y);
-		// 		// var formatSpeed;
-		// 		// if (uploadSpeed > 1024) {
-		// 		//     formatSpeed = (uploadSpeed / 1024).toFixed(2) + "Mb\/s";
-		// 		//     // $('#formatSpeed').html(formatSpeed);
-		// 		// } else {
-		// 		//     formatSpeed = uploadSpeed.toFixed(2) + "Kb\/s";
-		// 		//     // $('#formatSpeed').html(formatSpeed);
-		// 		// }
-		// 		// var percentComplete = Math.round(evt.loaded * 100 / evt.total);
-		// 		// progressbar.progressbar("value", percentComplete);
-		// 		// console && console.log(percentComplete, ",", formatSpeed);
-		// 	}
-		// }, false);
+		xhr.upload.addEventListener("progress", function(evt) {
+			if (evt.lengthComputable) {
+				var nowDate = new Date().getTime();
+				taking = nowDate - startDate;
+				var x = (evt.loaded) / 1024;
+				var y = taking / 1000;
+				// var uploadSpeed = (x / y);
+				// var formatSpeed;
+				// if (uploadSpeed > 1024) {
+				//     formatSpeed = (uploadSpeed / 1024).toFixed(2) + "Mb\/s";
+				//     // $('#formatSpeed').html(formatSpeed);
+				// } else {
+				//     formatSpeed = uploadSpeed.toFixed(2) + "Kb\/s";
+				//     // $('#formatSpeed').html(formatSpeed);
+				// }
+				// var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+				// progressbar.progressbar("value", percentComplete);
+				// console && console.log(percentComplete, ",", formatSpeed);
+				if ( _this.callback.progress != 'undefined' ) {
+					_this.callback.progress(evt);
+				}
+			}
+		}, false);
 		xhr.onreadystatechange = function(response) {
 			if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "") {
 					var blkRet = JSON.parse(xhr.responseText);
@@ -85,6 +89,11 @@ qiniu.prototype.Qiniu_upload = function( option, callback ) {
 		xhr.send(formData);
 	})
 };
+
+qiniu.prototype.callback = {};
+qiniu.prototype.on = function (progress, callback) {
+	this.callback[progress] = callback;
+}
 
 const qiniuUpload = new qiniu();
 
