@@ -86,7 +86,8 @@ export default {
             let data = {
                 content: val.value,
                 count: count,
-                messageType: messageType
+                messageType: messageType,
+                sessionType: 'chat'
             };
             this.$store.dispatch('sendMessage', data).then((t) => {
               if ( t.status == 1 ) {
@@ -938,6 +939,15 @@ export default {
         box-shadow: 0 0 10px #ccc;
         bottom: 100%;
         font-size: 19px;
+    }
+    .emoticon-list {
+        height: 300px;
+        overflow: auto;
+        li {
+            float: left;
+            width: 34px;
+            height: 34px;
+        }
     }
     ul{
          height: 100%;

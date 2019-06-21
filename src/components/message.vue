@@ -6,6 +6,8 @@ import { reverse } from "../messageHandel";
 
 import AlloyFinger from "alloyfinger/alloy_finger"; // 手势库
 import AlloyFingerVue from "alloyfinger/vue/alloy_finger";
+import messageConternt from "./view/messageContent";
+
 Vue.use(AlloyFingerVue, {
   AlloyFinger
 });
@@ -57,6 +59,9 @@ export default {
       },
       groupInfoNum: 0
     };
+  },
+  components: {
+    messageConternt
   },
   computed: mapState({
     user: state => state.user,
@@ -178,8 +183,8 @@ export default {
         this.$refs.audio.play();
         this.playComplete = true;
       }
-      e.currentTarget.parentNode.childNodes[0].style.display = "none";
-      G_SHOW = false;
+      // e.currentTarget.parentNode.childNodes[0].style.display = "none";
+      // G_SHOW = false;
       // console.log(e.target.nodeName);
       // console.log(e.target);
     },
@@ -306,7 +311,7 @@ export default {
       this.shareShow = true;
       this.shareContent = forwardInfo.forwardContent;
       this.shareType = forwardInfo.mesages_types;
-    },
+    }
   },
   created() {
     document.addEventListener("click", e => {
@@ -317,8 +322,8 @@ export default {
   },
   watch: {
     curSession: {
-      handler: function (value) {
-          console.log(this.groupInfoNum);
+      handler: function(value) {
+        console.log(this.groupInfoNum);
         //特别注意，不能用箭头函数，箭头函数，this指向全局
         if (value.type != "message") {
           this.$http
@@ -326,7 +331,7 @@ export default {
               "/omsIm/demo/json/getList.php?class=groupMembers&id=" + value.id
             )
             .then(res => {
-                console.log(this.groupInfoNum);
+              console.log(this.groupInfoNum);
               this.groupInfoNum = res.data.data.list.length;
             })
             .catch(res => {});
@@ -417,7 +422,9 @@ Vue.directive("scroll-bottom", function(el, bind) {
     <div class="dialog-title" v-chat-drop>
       <i class="backSession" @click="clearSession()"></i>
 
-      <span class="text-left dialogue-title-name">{{ dialogType == 'message'? dialogName :dialogName + "(" + groupInfoNum + ")" }}</span>
+      <span
+        class="text-left dialogue-title-name"
+      >{{ dialogType == 'message'? dialogName :dialogName + "(" + groupInfoNum + ")" }}</span>
       <!-- 个人信息 -->
       <i class="iconfont-chat man-info" @click.stop="userInfo()" v-if="dialogName">&#xe686;</i>
     </div>
@@ -440,27 +447,14 @@ Vue.directive("scroll-bottom", function(el, bind) {
 
           <div class="content-box" :data-content="item.content">
             <div
-              :class="{'content-act': true, 'content-act-right': !item.self, 'content-act-left': item.self}"
-            >
-              <div :class="{'content-act-list': true, 'content-box-d': item.self}">
-                <ul>
-                  <li @click="revoke()" v-if="item.self">撤回</li>
-                  <li @click.stop="forward(item.content)">
-                    <span>转发</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div
               v-if="!item.revokeState"
-              class="text"
               @contextmenu="mouseLeft($event,  item)"
               @click="sendType($event, item)"
               v-finger:long-tap="longTop"
               v-oncontextmenu="item.content"
-              v-html="content(item)"
-            ></div>
+            >
+              <messageConternt :items="item"></messageConternt>
+            </div>
             <div v-else class="messageRevoke">{{item.self ? '你撤销了一条消息' : item.name + '撤销了一条消息'}}</div>
           </div>
         </div>

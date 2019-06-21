@@ -10,8 +10,6 @@
     <video-chat v-if="videoChat" :videoChatType="videoChatType" @route="controller"></video-chat>
     <video-res v-if="videoChatShow" :videoChatInfo="videoChatInfo" @route="videoResConttroll" ></video-res>
     <video-chat-ing v-if="videoChatIngShow" :videochatIngInfo="videochatIngInfo" @route="videoChatIng" ></video-chat-ing>
-        
-    </video-res>
     <transition name="show">
         <div id="chat-main"  class="chat-main" ref="chatDrop" v-if="chatMainShow">
             <div v-if="!complete" class="mask">
@@ -239,8 +237,10 @@ export default {
                 // 请求消息数量
                 axios.ajax.get(jsonMessage)
                     .then((response) => {
-
-                        this.$store.dispatch('acceptMes', response.data.reverse());
+                        this.$store.dispatch('acceptMes', response.data.msgNum.reverse());
+                        for(var i in response.data.revoke) {
+                            this.$store.dispatch('revokeMes', {message_id: response.data.revoke[i].id});
+                        }
                         // qpp 推送
                         if (this.iPhone) {
                             axios.ajax.get(appPushMessage + this.mesNum)

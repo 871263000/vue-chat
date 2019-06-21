@@ -262,6 +262,9 @@ const store = new Vuex.Store({
             // };
 
         },
+        REVOKE_MES ({state}, data) {
+
+        },
         MES_CLOSE ({state, sessions}, data) {
             let session = sessions.find(item => item.id == data.session_no && item.type === data.message_type );
             session.messageNum = 0;
@@ -335,15 +338,15 @@ const store = new Vuex.Store({
             }
         },
         REVOKE_SEND (state, messageId) {
-            let sendMessage = {'type': 'revoke', 'messageId': messageId};
+            let sendMessage = {'type': 'RevokeMsg', 'data': {'msgId': messageId, 'sessionId': state.currentSession.id}};
             Websocket.sendMessage(sendMessage);
         },
         REVOKE (state, data) {
+            console.log(data);
            state.sessions.forEach((items, i) => {
                 let find = false;
                 items.messages.forEach((item, y) => {
                     if ( item.id == data.message_id ) {
-                        console.log(item);
                         find = true;
                         item.content = '已撤销';
                         item.revokeState = 1;
@@ -432,7 +435,8 @@ const store = new Vuex.Store({
                 accept_name: state.currentSession.name,
                 message_type: state.currentSessionType,
                 mes_types: data.messageType,
-                content: data.content
+                content: data.content,
+                sessionType: 'chat'
             };
 
             if ( state.currentSessionType != 'message'  ) {
@@ -492,10 +496,8 @@ const store = new Vuex.Store({
         // 后台发来的未读消息，
         acceptMes: ({ commit, state }, data) => {
             let saveData;
-
-            let name, sessionId,sessionName,img, sessionImg;
+            let sessionId
             if ( data ) {
-
                 data.forEach(function ( d ) {
                     // return;
                     if ( d.message_type == 'message' ) {
@@ -526,12 +528,13 @@ const store = new Vuex.Store({
                         type: d.message_type,
                         date: d.create_time,
                         accept_id: d.accept_id,
-                        revokeState: d.revokeState,
+                        revokeState: d.revokeStatus,
                         acceptMode: 'h',
                         mesages_types: d.mesages_types
 
                     };
                     saveData.code = 1;
+                    console.log(saveData);
                     commit('SEND_MESSAGE', saveData);
                     // console.log(saveData);
                 });
@@ -540,6 +543,7 @@ const store = new Vuex.Store({
             return false;
 
         },
+        revokeMes: ({ commit }, data) => {commit('REVOKE', data)},
         selectSession: ({ commit }, data) => {commit('SELECT_SESSION', data)},
         delSession: ({ commit }, index) => {
             commit('DELSESSION', index);
