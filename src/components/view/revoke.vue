@@ -12,7 +12,7 @@ export default {
     };
   },
   created() {
-    this.content = this.content.replace(/&lbrg/g, "<br>");
+    this.content = '消息已撤回！';
   }
 };
 </script>

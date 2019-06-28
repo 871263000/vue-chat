@@ -12,7 +12,7 @@ export default {
     };
   },
   created() {
-    this.content = this.content.replace(/&lbrg/g, "<br>");
+    this.content = "不知道的类型！";
   }
 };
 </script>

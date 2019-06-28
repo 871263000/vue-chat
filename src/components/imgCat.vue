@@ -44,7 +44,6 @@ export default {
     },
     pcRotate (direction) {
         let img = this.$refs.img;
-       
         if (direction === 'left') {
            img.rotateZ += 90;
         } else {
@@ -93,9 +92,7 @@ export default {
       vueTransform(img);
 
       let scrollFunc = function(e) {
-
         initScale = img.scaleX;
-
         // e是FF的事件。window.event是chrome/ie/opera的事件
         let ee = e || window.event;
         let fx = 0;
@@ -108,9 +105,9 @@ export default {
         }
         // let transform = _this.$refs.img.style.transform;
         if ( fx > 0) {
-          img.scaleX = img.scaleY = (initScale + 0.1);
+          img.scaleX = img.scaleY = (initScale + 0.02);
         } else {
-          img.scaleX = img.scaleY = (initScale - 0.1);
+          img.scaleX = img.scaleY = (initScale - 0.02);
         }
       }
 
@@ -121,9 +118,6 @@ export default {
       } 
       //IE/Opera/Chrome/Safari
       mm.onmousewheel = img.onmousewheel = scrollFunc; 
-
-
-
       mm.onmousedown = function (e) { 
           var e = e || window.event;
           // let marginLeft = dropEl.offsetWidth/2;
@@ -142,9 +136,6 @@ export default {
               document.onmouseup = null;
           };
       }
-
-
-
       let clientWidth = document.body.clientWidth;
       let clientHeight = document.body.clientHeight;
 

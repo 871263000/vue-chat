@@ -1,6 +1,6 @@
 <template>
   <div>
-    <img style="max-width: 200px;" class="chat-img" :src="src" :alt="alt">
+    <img style="max-width: 200px;" @click="$emit('enlarge', src)" class="chat-img" :src="src" :alt="alt">
   </div>
 </template>
 <script>

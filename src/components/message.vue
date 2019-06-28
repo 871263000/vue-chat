@@ -6,7 +6,7 @@ import { reverse } from "../messageHandel";
 
 import AlloyFinger from "alloyfinger/alloy_finger"; // 手势库
 import AlloyFingerVue from "alloyfinger/vue/alloy_finger";
-import messageConternt from "./view/messageContent";
+import messageContent from "./view/messageContent";
 
 Vue.use(AlloyFingerVue, {
   AlloyFinger
@@ -61,7 +61,7 @@ export default {
     };
   },
   components: {
-    messageConternt
+    messageContent
   },
   computed: mapState({
     user: state => state.user,
@@ -108,85 +108,17 @@ export default {
     }
   },
   methods: {
+    shareShowClick(item) {
+      console.log(5666);
+      this.shareContent = item.content;
+      this.shareType = item.mesages_types;
+      this.shareShow = true;
+    },
     content(item) {
       let content = item.content;
       let mesages_types = item.mesages_types;
-
-      if (content.indexOf("#--liveVideo--#") !== -1) {
-        let tp = 1,
-          fid = "",
-          m = "";
-        if (this.dialogType == "message") {
-          tp = 1;
-        } else {
-          tp = 2;
-        }
-        fid = this.dialogId;
-        let liveVideoUrl =
-          "https://www.omso2o.com/video_chat_gateway.php?tp=" +
-          tp +
-          "&fid=" +
-          fid;
-        m =
-          '<span>视频邀请：</span><a class="chat-live-video" href="' +
-          liveVideoUrl +
-          '" target="_blank">点击加入...</a>';
-        return m;
-      }
-      if (content.indexOf("-voice-[") !== -1) {
-        content = content.replace(/-(voice)-\[(.*?)\]/g, function(f, i, z) {
-          let m = "";
-          let zArr = z.split("|");
-
-          if (z[1]) {
-            if (self) {
-              m =
-                '<voice class="iconfont-chat" data-type="' +
-                mesages_types +
-                '" data-content="' +
-                zArr[1] +
-                '">&#xe604;<i class="playingRight"></i></voice>';
-            } else {
-              m =
-                '<voice class="iconfont-chat" data-content="' +
-                zArr[1] +
-                '">&#xe605;<i class="playingLeft"></i></voice>';
-            }
-          }
-          return m;
-        });
-        return content;
-      }
+      
       return reverse(content, mesages_types);
-    },
-    sendType(e, item) {
-      let _this = this;
-      if (e.target.nodeName == "IMG") {
-        let img = e.target.src;
-
-        // this.imgfdBoxinfo = img;
-        this.$emit("enlarge", img);
-        // this.showImg = true;
-      }
-      if (e.target.nodeName == "SHARE") {
-        this.shareContent = item.content;
-        this.shareType = item.mesages_types;
-        this.shareShow = true;
-      }
-      if (e.target.nodeName == "VOICE") {
-        this.$refs.audio.onended = function() {
-          _this.playComplete = false;
-          e.target.children[0].style.display = "none";
-        };
-        this.$refs.audio.src = e.target.getAttribute("data-content");
-        e.target.children[0].style.display = "inline-block";
-        this.$refs.audio.play();
-        this.playComplete = true;
-      }
-      // e.currentTarget.parentNode.childNodes[0].style.display = "none";
-      // G_SHOW = false;
-      // console.log(e.target.nodeName);
-      // console.log(e.target);
     },
     clearSession() {
       this.$emit("mainShow");
@@ -288,24 +220,12 @@ export default {
       }
       evt.stopPropagation();
       G_SHOW = true;
-      // evt.target.getAttribute('data-content');
-
-      // $event.appendChild($event);
-      // console.log($event);
     },
     messageImgFd(img) {
       this.$emit("enlarge", img);
     },
-    contentAct(content, e) {
-      let el = e.currentTarget;
-      if (
-        el.children[0].style.display == "none" ||
-        el.children[0].style.display == ""
-      ) {
-        el.children[0].style.display = "block";
-      } else {
-        el.children[0].style.display = "none";
-      }
+    enlarge(src) {
+      this.$emit("enlarge", src);
     },
     forward(forwardInfo) {
       this.shareShow = true;
@@ -393,7 +313,6 @@ Vue.directive("scroll-bottom", function(el, bind) {
 
 <template>
   <div class="message">
-    <audio ref="audio"></audio>
     <!-- 分享 -->
     <shareModel @selectedMan="share" :group="true" v-if="shareShow" @close="shareShow =false"></shareModel>
     <!-- 群里的人 -->
@@ -448,12 +367,12 @@ Vue.directive("scroll-bottom", function(el, bind) {
           <div class="content-box" :data-content="item.content">
             <div
               v-if="!item.revokeState"
+              class="text"
               @contextmenu="mouseLeft($event,  item)"
-              @click="sendType($event, item)"
               v-finger:long-tap="longTop"
               v-oncontextmenu="item.content"
             >
-              <messageConternt :items="item"></messageConternt>
+              <messageContent :key="item.id" :items="item" @share="shareShowClick" @enlarge="enlarge"></messageContent>
             </div>
             <div v-else class="messageRevoke">{{item.self ? '你撤销了一条消息' : item.name + '撤销了一条消息'}}</div>
           </div>
@@ -681,7 +600,7 @@ Vue.directive("scroll-bottom", function(el, bind) {
         font-size: 12px;
         color: #fff;
         border-radius: 2px;
-        background-color: #af9a9a;
+        background-color: #1b1b1b3d;
       }
     }
     .avatar {
@@ -919,7 +838,7 @@ Vue.directive("scroll-bottom", function(el, bind) {
         font-size: 12px;
         color: #fff;
         border-radius: 2px;
-        background-color: #af9a9a;
+        background-color: #aaa8ad;
       }
     }
     .avatar {

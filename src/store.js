@@ -377,7 +377,6 @@ const store = new Vuex.Store({
         initData: ({ commit, dispatch, state }, initData) => {
              Websocket.on('open', function () {
                 commit('CONNECT_TYPE_CHANGE', 200);
-
                 Websocket.sendMessage({"type": 'login', 'platform': 'web', oms_id: initData.data.mine.oms_id, uid: initData.data.mine.id, header_img_url: initData.data.mine.avatar, token: initData.data.mine.token, client_name: initData.data.mine.username, room_id: initData.data.mine.oms_id });
             });
             Websocket.on('comeMessage', function (data) {

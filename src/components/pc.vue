@@ -217,14 +217,10 @@ export default {
                 };
             }
             // 请求人员信息
-            // let json = '/static/omsIm/demo/json/json.js';
             let json = '/omsIm/demo/json/getList.php';
-
-            // let jsonMessage = '/static/omsIm/demo/json/jsonMessage.js?class=mesNum';
             let jsonMessage = '/omsIm/demo/json/getList.php?class=mesNum';
-            
-            // let appPushMessage = '/static/omsIm/demo/json/jsonMessage.js?class=appPush&mesNum=';
             let appPushMessage = '/omsIm/demo/json/getList.php?class=appPush&mesNum=';
+            
             axios.ajax.get(json)
             .then((response) => {
                 this.$store.dispatch('initData', response.data);

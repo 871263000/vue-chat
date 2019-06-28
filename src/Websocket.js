@@ -4,7 +4,6 @@ let callbacks = {};
 
 const act = {
 	COME_MESSAGE: (e) => {
-
 		let data = JSON.parse(e.data);
 		callbacks.comeMessage && callbacks.comeMessage(data);
 	},
@@ -36,8 +35,8 @@ const websocket = {
 	},
 	connect() {
 		// ws = new WebSocket("ws://chat.omso2o.com:7272");
-		ws = new WebSocket("ws://localhost:7272");
-		// ws = new WebSocket("wss://chat.omso2o.com/wss");
+		// ws = new WebSocket("ws://localhost:7272");
+		ws = new WebSocket("wss://chat.omso2o.com/wss");
 		ws.onopen = function () {
 			let call;
 			// setTimeout(function () {

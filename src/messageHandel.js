@@ -65,7 +65,6 @@ export const reverse = function ( content, mesages_types ) {
           m = '<div class="chat-file" style="-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;"><share class="iconfont-chat chat-share" data-type="'+mesages_types+'" data-content="'+f+'">&#xe6cb;</share><a title="'+zArr[0]+'" href="'+zArr[1]+'" download target="_blank"><i class="iconfont-chat">&#xe662;</i><p title="'+zArr[0]+'">'+zArr[0]+'</p></a></div>';
         } else if ( i == 'video' ) {
            m =  '<video controls="controls" style="width: 200px; height: 200px" src="' +zArr[1] + '"></video>';
-          // m = '<div class="chat-file"><share class="iconfont-chat chat-share" data-content="'+f+'">&#xe6cb;</share><a title="'+zArr[0]+'" href="'+zArr[1]+'" download target="_blank"><i class="iconfont-chat">&#xe662;</i><p title="'+zArr[0]+'">'+zArr[0]+'</p></a></div>';
         }
       };
       return m;

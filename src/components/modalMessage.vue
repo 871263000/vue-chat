@@ -237,7 +237,6 @@ Vue.directive('scroll-bottom', function(el) {
 		</div>
 	</asyncModal>
         <MshowModal v-if="shareShow" @close="shareShow =false" @selectedMan="share" :group="true">
-        
     </MshowModal>
 </div>
 </template>

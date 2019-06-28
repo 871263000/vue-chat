@@ -125,11 +125,15 @@ export default {
                 return false;
             };
             let messageType;
+            // this.$refs.file.value = '';
             for (var i = 0; i < files.length; i++) {
                 file = files[i];
-                if(/image\/\w+/.test(file.type)){
+                if(file.type.indexOf('image') != -1){
                     type = 'img';
                     messageType = 'image';
+                } else if (file.type.indexOf('mp4') != -1) {
+                    type = 'video';
+                    messageType = 'video';
                 } else {
                     type = 'file';
                     messageType = 'file';
@@ -170,7 +174,11 @@ export default {
                             cd = {
                                 content: '-file-['+data.fname+'|'+'http://omso2o.com/'+data.key+']',
                             };
-                        } else {
+                        } else if (type == 'video') {
+                             cd = {
+                                content: '-video-['+data.fname+'|'+'http://omso2o.com/'+data.key+']',
+                            };
+                        } else if (type == 'img') {
                              cd = {
                                 content: '-img-['+data.fname+'|'+'http://omso2o.com/'+data.key+']',
                             };
@@ -589,7 +597,7 @@ export default {
            <!--  // 工具  表情 -->
                 <li @click.stop="emShow = !emShow"><i class="iconfont-chat">&#xe62c;</i></li>
             <!-- 文件上传  -->
-                <li><label for="chat-file"><img src="../assets/wenjian.png" alt=""></label><input type="file" id="chat-file" style="display: none" @change="fileUpload($event)" multiple></li>
+                <li><label for="chat-file"><img src="../assets/wenjian.png" alt=""></label><input ref="file" type="file" id="chat-file" style="display: none" @change="fileUpload($event)" multiple></li>
                 <!-- 视频 -->
                 <li @click.stop="videoChat()"><i class="iconfont-chat">&#xe786;</i></li>
 
