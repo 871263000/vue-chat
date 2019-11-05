@@ -3,6 +3,7 @@
 </template>
 <script>
 import Vue from "vue";
+import emojis from "../../common/emojis";
 export default {
   name: "hello",
   props: ["items"],
@@ -12,7 +13,31 @@ export default {
     };
   },
   created() {
-    this.content = this.content.replace(/&lbrg/g, "<br>");
+    this.content = this.content.replace(/&lbrg/g, "<br>")
+    .replace(/(http:\/\/|https:\/\/)((\w|=|\?|\.|\/|&|-)+)[^\]]/g, function (y, u) {
+      if ( y.indexOf('http://omso2o.com') != -1 ) {
+        return y;
+      }
+      if ( content.indexOf('-liveVideo-[') != -1 ) {
+        return y;
+      }
+      // if ( y.indexOf('7xq4o9') != -1 ) {
+      //   return y;
+      // }
+      let a = '<a href="'+y+'" target="_blank">'+y+'</a>';
+      return a;
+    })
+    .replace(/\[(.{1,3})\]/g, function(r, f) {
+      let em = emojis.find(em => {
+          return em.name == f;
+      });
+      if ( !em ) {
+        return r;
+      }
+      let img = '<img width="20px"  src="https://www.omso2o.com/chatStatic/emoji/'+em.num+'@2x.png" alt="'+em.name+'" />'
+      return img;
+    });
+    // this.content = this.content.replace(/&lbrg/g, "<br>");
   }
 };
 </script>

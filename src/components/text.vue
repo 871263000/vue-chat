@@ -3,7 +3,7 @@ import { mapState } from 'vuex';
 import Vue from 'vue';
 import insertAtCursor from '../common/insertAtCursor';
 import qn from '../common/QiniuUpload';
-import emojisList from '../common/emojisList';
+import emojisList from '../common/emojis';
 import pasteEvnet from '../common/pasteEvnet';
 import { imgReader } from '../common/pasteEvnet';
 import Recorder from 'recorderjs';
@@ -48,7 +48,7 @@ export default {
                 src: '',
             },
             sondShow: false,
-            progressShow: false
+            progressShow: false,
         };
     },
     computed: mapState({
@@ -359,7 +359,6 @@ export default {
                 return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
             }
             let qiniuUpload = function (file) {
-
                 qn.Qiniu_upload({
                     key: '/voice/voicefile'+guid()+'.m4a',
                     tokenurl: this.user.documentUrlOms + '/chat/uptoken.php',
@@ -492,7 +491,6 @@ export default {
         let data = localStorage.getItem('currentSel');
         let _this = this;
         this.$nextTick( () => {
-            console.log(this.iphoneText);
             if ( this.iphoneText ) {
                 // document.getElementsByName('body')[0].addEventListener('touchend',function(e){
                 //     // 改变了事件名称，tap是在body上才被触发，而touchend是原生的事件，在dom本身上就会被捕获触发
@@ -585,11 +583,8 @@ export default {
         <div class="chat-tool">
             <div class="emoticon" v-if="emShow">
                 <ul class="emoticon-list">
-                    <li @click.stop = "emojiInsert(emoji)" v-for="(emoji, index) in emojis">
-                        <span>
-                            {{emoji}}
-                        </span>    
-                        <!-- <img :src="'https://www.omso2o.com/chatStatic/emoji/'+ emojiObj.num +'@2x.png'" :title="emojiObj.name" alt=""> -->
+                    <li @click.stop = "emojiInsert('[' + emojiObj.name + ']')" v-for="(emojiObj, index) in emojis">
+                        <img :src="'https://www.omso2o.com/chatStatic/emoji/'+ emojiObj.num +'@2x.png'" :title="emojiObj.name" alt="">
                     </li>
                 </ul>
             </div>
@@ -949,7 +944,7 @@ export default {
         font-size: 19px;
     }
     .emoticon-list {
-        height: 300px;
+        height: 200px;
         overflow: auto;
         li {
             float: left;

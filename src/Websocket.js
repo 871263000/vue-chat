@@ -12,19 +12,16 @@ const act = {
 		ws.send(str);
 	},
 	OPEN: () => {
-		let call;
-		// setTimeout(function () {
 		callbacks.open && callbacks.open();
-		return call = new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			resolve();
 		})
-		// }, 500);
 	},
 	TEXT: () => {
 		callbacks.text();
 	}
 }
-
+var sit;
 
 const websocket = {
 	on: (name, callback) => {
@@ -38,20 +35,17 @@ const websocket = {
 		// ws = new WebSocket("ws://localhost:7272");
 		ws = new WebSocket("wss://chat.omso2o.com/wss");
 		ws.onopen = function () {
-			let call;
-			// setTimeout(function () {
+			if (sit) {
+				clearInterval(sit);
+			}
 			callbacks.open && callbacks.open();
-			// return call = new Promise((resolve, reject) => {
-			//                  resolve();
-			//              })
 		};
-		// ws.onopen().then(()=>{
-		// 	console.log(6677);
-		// })
 		// 当有消息时根据消息类型显示不同信息
 		ws.onmessage = act.COME_MESSAGE;
-		let self = this;
 		ws.onclose = () => {
+			if (!sit) {
+				sit = setInterval(function(){ websocket.connect() }, 3000);
+			}
 			callbacks.close();
 			console.log("连接关闭，定时重连");
 		};

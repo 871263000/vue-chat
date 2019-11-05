@@ -59,11 +59,10 @@ Vue.component("message-list", {
   }
 });
 export default {
-  name: "hello",
   props: ["items"],
   data() {
     return {
-      msg: "Welcome to Your Vue.js App"
+      msg: ""
     };
   },
   methods: {

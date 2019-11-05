@@ -4,13 +4,13 @@ import Vue from "vue";
 import insertAtCursor from "../common/insertAtCursor";
 import { reverse } from "../messageHandel";
 
-import AlloyFinger from "alloyfinger/alloy_finger"; // 手势库
-import AlloyFingerVue from "alloyfinger/vue/alloy_finger";
+// import AlloyFinger from "alloyfinger/alloy_finger"; // 手势库
+// import AlloyFingerVue from "alloyfinger/vue/alloy_finger";
 import messageContent from "./view/messageContent";
 
-Vue.use(AlloyFingerVue, {
-  AlloyFinger
-});
+// Vue.use(AlloyFingerVue, {
+//   AlloyFinger
+// });
 
 let G_SHOW = false;
 
@@ -109,7 +109,6 @@ export default {
   },
   methods: {
     shareShowClick(item) {
-      console.log(5666);
       this.shareContent = item.content;
       this.shareType = item.mesages_types;
       this.shareShow = true;

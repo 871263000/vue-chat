@@ -11,7 +11,6 @@ export const reverse = function ( content, mesages_types ) {
   };
   // console.log(content);return false;
 	content = content.replace(/&lbrg/g, '<br>')
-	.replace(/http\:\/\/7xq4o9\.com1\.z0\.glb\.clouddn\.com/, 'http://omso2o.com')
   	.replace(/(http:\/\/|https:\/\/)((\w|=|\?|\.|\/|&|-)+)[^\]]/g, function (y, u) {
       if ( y.indexOf('http://omso2o.com') != -1 ) {
         return y;

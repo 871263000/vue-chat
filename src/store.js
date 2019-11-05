@@ -5,7 +5,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import Websocket from './Websocket';
-import { reverse } from './messageHandel';
 import messageHandle from './messageHandel';
 import  events from './modules/events';
 import  video from './modules/video';
@@ -14,11 +13,7 @@ import axios from 'axios'
 Vue.use(Vuex);
 // Vue.prototype.$http = axios
 axios.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-const now = new Date();
 
-let chatFind = function (callback) {
-
-}
 const store = new Vuex.Store({
     state: {
         // 当前用户
@@ -167,7 +162,6 @@ const store = new Vuex.Store({
 
             // 会话列表里有
             if ( session ) {
-
                 // 发送者 和 聊天人 不是同一人
                 if ( data.dialogueId != currentSession.id && data.senderId != user.id ) {
                     session.messageNum++;
@@ -176,7 +170,6 @@ const store = new Vuex.Store({
                 if ( session.messages.length > 20 ) {
                     session.messages.shift();
                 };
-
                 saveMessage.img = session.user.img;
                 saveMessage.name = session.user.name;
                 if ( data.type == 'groupMessage' ) {
@@ -204,7 +197,6 @@ const store = new Vuex.Store({
                 }
                  // 会话列表里没有
             } else {
-
                 let fg = {}; // 找到这个 id 对应的 信息
                 if ( data.type != 'groupMessage' ) {
                     if ( data.sessionId == "sysNotice" ) {
@@ -495,7 +487,7 @@ const store = new Vuex.Store({
         // 后台发来的未读消息，
         acceptMes: ({ commit, state }, data) => {
             let saveData;
-            let sessionId
+            let sessionId;
             if ( data ) {
                 data.forEach(function ( d ) {
                     // return;
@@ -509,7 +501,6 @@ const store = new Vuex.Store({
                     // });
                     // let session = state.sessions;
                     // 是否存在这个消息
-
                     let session = state.sessions.find(item => item.id == sessionId && item.type === d.message_type );
                     if ( session ) {
                         let sessionSave = session.messages.find(item=>item.id == d.id);
@@ -533,7 +524,6 @@ const store = new Vuex.Store({
 
                     };
                     saveData.code = 1;
-                    console.log(saveData);
                     commit('SEND_MESSAGE', saveData);
                     // console.log(saveData);
                 });

@@ -742,7 +742,7 @@ Vue.directive('oncontextmenu', {
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 span {
-                    display: inline-block;
+                    display: inline;
 
                 }
             }
@@ -919,7 +919,7 @@ Vue.directive('oncontextmenu', {
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 span {
-                    display: inline-block;
+                    display: inline;
                     
                 }
             }
