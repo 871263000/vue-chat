@@ -82,6 +82,7 @@ const actions = {
 		// } else {
 
 		// }
+		console.log(data);
 		let name, sessionId,sessionName,img, sessionImg, dialogueId;
 
 		if ( data.mestype == 'message' ) {
@@ -105,24 +106,18 @@ const actions = {
 			mesages_types: data.mesages_types
 
 		};
+		if (data.mestype == 'groupMessage') {
+			if(data.remindId && data.remindId.length > 0) {
+				saveData.remindId = data.remindId;
+			}
+		}
 		saveData.code = data.code;
 		saveData.msg = data.msg;
 		showMsgNotification('聊天消息', data.message_content, sessionImg);
 		commit('SEND_MESSAGE', saveData);
 	},
 	resSayUid: ({ state, commit, rootState }, data) => {
-		// let sessionImg, sessionName, name, img;
-		// if ( data.mestype == 'message' ) {
-		// 	sessionName = rootState.currentSession.name;
-		// 	sessionImg = rootState.currentSession.img;
-		// 	name = rootState.currentSession.name;
-		// 	img = rootState.currentSession.img;
-		// } else if ( data.mestype == 'groupMessage' ) {
-		// 	sessionName =  rootState.currentSession.name;
-		// 	sessionImg = '/chat/images/ren.png';
-		// 	name = rootState.currentSession.name;
-		// 	img = rootState.currentSession.img;
-		// }
+		console.log(data);
 		if ( data.mestype == 'groupMessage' ) {
 			data.to_uid = data.session_no;
 		}

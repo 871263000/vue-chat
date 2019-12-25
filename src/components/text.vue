@@ -8,9 +8,10 @@ import pasteEvnet from '../common/pasteEvnet';
 import { imgReader } from '../common/pasteEvnet';
 import Recorder from 'recorderjs';
 import RTCat from 'realtimecatjs';
-
+import globalBus from "../globalBus";
 import AlloyFinger from 'alloyfinger/alloy_finger' // 手势库
 import AlloyFingerVue from 'alloyfinger/vue/alloy_finger'
+
 Vue.use(AlloyFingerVue, {
   AlloyFinger
 });
@@ -49,6 +50,7 @@ export default {
             },
             sondShow: false,
             progressShow: false,
+            remindId: []
         };
     },
     computed: mapState({
@@ -89,6 +91,11 @@ export default {
                 messageType: messageType,
                 sessionType: 'chat'
             };
+            if (this.remindId.length > 0) {
+                data.remindId = this.remindId.concat();
+            }
+            this.remindId = [];
+            console.log(data);
             this.$store.dispatch('sendMessage', data).then((t) => {
               if ( t.status == 1 ) {
                     val.value = '';
@@ -476,7 +483,7 @@ export default {
         }
     },
     created () {
-        let isMobile = function(){
+        let isMobile = function(){ 
             let userAgentInfo = navigator.userAgent;
             let Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod")
             let flag = false;
@@ -488,6 +495,11 @@ export default {
         if(isMobile){
             this.iphoneText = true;
         }
+        globalBus.$on('appoint', (text, sender_id)=> {
+            console.log(sender_id);
+            insertAtCursor(this.$refs.textarea, text);
+            this.remindId.push(sender_id); 
+        })
         let data = localStorage.getItem('currentSel');
         let _this = this;
         this.$nextTick( () => {

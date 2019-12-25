@@ -9,6 +9,7 @@ import messageHandle from './messageHandel';
 import  events from './modules/events';
 import  video from './modules/video';
 import axios from 'axios'
+import messagesList from './modules/messagesList';
 
 Vue.use(Vuex);
 // Vue.prototype.$http = axios
@@ -68,19 +69,7 @@ const store = new Vuex.Store({
     },
     mutations: {
         INIT_DATA (state, initData) {
-            // let isMobile = function(){
-            //     let userAgentInfo = navigator.userAgent;
-            //     let Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod")
-            //     let flag = false;
-            //     for (let v = 0; v < Agents.length; v++) {
-            //         if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = true; break; }
-            //     };
-            //     return flag;
-            // }();
-
-            // if(isMobile){
-            //     state.iPhone = true;
-            // }
+            
             state.user.id = initData.data.mine.id;
             state.user.name= initData.data.mine.username;
             state.user.omsId= initData.data.mine.oms_id;
@@ -113,13 +102,13 @@ const store = new Vuex.Store({
             }
             state.sessions = dataJson;
             if ( userSet ) {
-                // console.log(userSet);
                 state.userSet = JSON.parse(userSet);
             };
         },
         // 收到消息
         SEND_MESSAGE ({sessions, currentSession, user, friends, currentSessionType, group }, data) {
             // 消息对方没有接受
+            console.log(data);
             if (data.code == 0) {
                 if ( data.type == 'groupMessage' ) {
                     sessions.forEach((item, index)=> {
@@ -142,7 +131,8 @@ const store = new Vuex.Store({
                     self: true,
                     accept_id: data.accept_id,
                     revokeState: data.revokeState,
-                    mesages_types: data.mesages_types
+                    mesages_types: data.mesages_types,
+                    sender_id: data.senderId
                 }
             } else {
                 let date = '';
@@ -153,15 +143,19 @@ const store = new Vuex.Store({
                     id: data.id,
                     content: data.content,
                     date: date || new Date(),
+                    self: false,
                     accept_id: data.accept_id,
                     revokeState: data.revokeState,
-                    mesages_types: data.mesages_types
+                    mesages_types: data.mesages_types,
+                    sender_id: data.senderId
                 }
-
             }
 
             // 会话列表里有
             if ( session ) {
+                if(data.remindId && data.remindId.indexOf(user.id.toString()) != -1) {
+                    session.remind = {state: 1};
+                }
                 // 发送者 和 聊天人 不是同一人
                 if ( data.dialogueId != currentSession.id && data.senderId != user.id ) {
                     session.messageNum++;
@@ -241,7 +235,11 @@ const store = new Vuex.Store({
                     },
                     messageNum: 0,
                     type: data.type,
-                    messages: []
+                    messages: [],
+                    remind: { state: 0 }
+                }
+                if(data.remindId && data.remindId.indexOf(currentSession.id)) {
+                    session.remind.state = 1;
                 }
                 if ( data.dialogueId != currentSession.id  && data.senderId != user.id) {
                     session.messageNum++;
@@ -267,12 +265,15 @@ const store = new Vuex.Store({
             let session = state.sessions.find(item => item.id == data.id && item.type == data.type);
             // 服务器端消除消息
             if ( session && session.messageNum != 0 ) {
+                session.messageNum = 0;
                 Websocket.sendMessage({"type":"mes_close", "to_uid":data.id,  "session_no": data.id, "message_type": data.type});
             };
-            if ( session && session.messageNum != 0 ) {
-                session.messageNum = 0;
+            if ( session) {
+                if (session.remind){
+                    session.remind.state = 0
+                }
             };
-            console.log(data);
+            
             state.currentSession.id = data.id;
             state.currentSession.name = data.name;
             state.currentSession.img = data.img;
@@ -330,11 +331,10 @@ const store = new Vuex.Store({
             }
         },
         REVOKE_SEND (state, messageId) {
-            let sendMessage = {'type': 'RevokeMsg', 'data': {'msgId': messageId, 'sessionId': state.currentSession.id}};
+            let sendMessage = {'type': 'RevokeMsg', 'data': {'msgId': messageId, 'sessionId': state.currentSession.id, 'category': state.currentSession.type}};
             Websocket.sendMessage(sendMessage);
         },
         REVOKE (state, data) {
-            console.log(data);
            state.sessions.forEach((items, i) => {
                 let find = false;
                 items.messages.forEach((item, y) => {
@@ -408,16 +408,8 @@ const store = new Vuex.Store({
 
         },
         sendMessage: ({ commit, state }, data) => {
-            let call;
             let sendMessage = {};
-            let content = '';
-            data.dialogueId = state.currentSession.id;
-
-            data.senderId = state.user.id;
-            data.name = state.currentSession.name;
-            data.img = state.currentSession.img;
-            data.type = state.currentSessionType;
-            data.content = messageHandle(data.content);
+            let call = '';
             // 转换内容
             sendMessage = {
                 type:"sayUid",
@@ -426,10 +418,12 @@ const store = new Vuex.Store({
                 accept_name: state.currentSession.name,
                 message_type: state.currentSessionType,
                 mes_types: data.messageType,
-                content: data.content,
+                content: messageHandle(data.content),
                 sessionType: 'chat'
             };
-
+            if (data.remindId) {
+                sendMessage.remindId = data.remindId;
+            }
             if ( state.currentSessionType != 'message'  ) {
                 sendMessage.session_no = state.currentSession.id;
             };
@@ -486,13 +480,18 @@ const store = new Vuex.Store({
         },
         // 后台发来的未读消息，
         acceptMes: ({ commit, state }, data) => {
+            console.log(data);
             let saveData;
             let sessionId;
             if ( data ) {
                 data.forEach(function ( d ) {
                     // return;
                     if ( d.message_type == 'message' ) {
-                        sessionId = d.sender_id;
+                        if (d.sender_id ==  state.user.id) {
+                            sessionId = d.accept_id;
+                        } else {
+                            sessionId = d.sender_id;
+                        }
                     } else {
                         sessionId = d.session_no;
                     }
@@ -523,6 +522,10 @@ const store = new Vuex.Store({
                         mesages_types: d.mesages_types
 
                     };
+                    if (d.message_type == 'groupMessage' && d.remind_id) {
+                        saveData.remindId = d.remind_id.split();
+                    }
+                    console.log(saveData);
                     saveData.code = 1;
                     commit('SEND_MESSAGE', saveData);
                     // console.log(saveData);

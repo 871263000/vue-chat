@@ -1,0 +1,10 @@
+let message = new Object();
+message.id = '';
+message.content = '';
+message.date = '';
+message.self = '';
+message.accept_id = '';
+message.revokeState = '';
+message.mesages_types = '';
+message.img = '';
+message.name = '';

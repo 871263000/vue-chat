@@ -16,6 +16,11 @@ Vue.component('friendApply', function (resolve) {
     require(['./friendsApply'], resolve);
 });
 
+const TYPE = {
+    'image': '[图片]',
+    'file': '[文件]'
+}
+
 export default {
     data  () {
         return {
@@ -57,9 +62,6 @@ export default {
                 this.mousedowInfo.id = i.id;
                 this.mousedowInfo.index = index;
             };
-            // console.log(i);
-            // console.log(index);
-            // console.log(event);
         },
         removeZjlxr ()  {
             // console.log(this.mousedowInfo.id);
@@ -106,23 +108,6 @@ export default {
             } else {
                 elLI.style.left =  '0px';
             }
-            // let elLeft = el.style.left;
-            // let deltaX = evt.deltaX;
-            // console.log(parseInt(elLeft));
-            // if ( deltaX > 0 &&  Math.abs(parseInt(elLeft)) < WIDTH/2 ) {
-            //     el.style.left = 0;
-            //     return ;
-            // } else if ( deltaX < 0 && Math.abs(parseInt(elLeft))> WIDTH/2) {
-            //     el.style.left = WIDTH;
-            //     return ;
-            // }
-            // if ( elLeft ) {
-            //     el.style.left = ( parseInt(elLeft) + deltaX )+ 'px';
-            // } else {
-            //     el.style.left = deltaX + 'px';
-            // }
-            
-            // console.log(el);
         },
         delzjlxr (index, e) {
             this.$store.dispatch('delSession', index);
@@ -131,7 +116,34 @@ export default {
         signReaded (index, num, e) {
              this.$store.dispatch('signReaded', {index: index, num: num});
              this.swipe(e);
-        } 
+        },
+        listContent(item) {
+            console.log(item);
+            let contentShow = '';
+            let sendName = '';
+            let message = item.messages[item.messages.length -1];
+            let content = message.content;
+            let isSelf = message.self;
+            let typeMessage = message.mesages_types;
+            let type = item.type;
+            if (!content) {
+                return '';
+            }
+            
+            content = content.replace(/&lbrg/, '');
+            if (typeMessage == 'text') {
+                contentShow = content;
+            } else {
+                contentShow = TYPE[typeMessage] ? TYPE[typeMessage] : '不知道的类型！';
+                
+            }
+            if (type == 'message' || isSelf) {
+                sendName = '';
+            } else {
+                sendName = message.name + ':';
+            }
+            return sendName + contentShow;
+        }
     },
     filters: {
         // 将日期过滤为 hour:minutes
@@ -276,9 +288,8 @@ Vue.directive('oncontextmenu', {
                             <p class="name">{{item.user.name}}</p>
                         </div>
                         <div class="list-message" v-if="item.messages.length > 0">
-                            <span class="list-message-name"  >{{item.messages[item.messages.length-1].self || item.type =='message'   ? '' : item.messages[item.messages.length-1].name + ':' }}</span>
-
-                            <span v-if="!item.revokeState">{{ item.messages[item.messages.length-1].content | content }}</span>
+                            <span style="color: red" v-if="item.remind && item.remind.state" >[有人@我]</span>
+                            <span v-if="!item.revokeState">{{listContent(item)}}</span>
                             <span v-else>"已撤销"</span>
                         </div>
                     </div>
@@ -688,8 +699,6 @@ Vue.directive('oncontextmenu', {
         &::scrollbar-resizer{background:#ff0bee}
     }
     li {
-       
-       
         .message-num {
             position: absolute;
             display: line-block;

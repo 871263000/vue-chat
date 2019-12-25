@@ -1,8 +1,10 @@
 <script>
 import { mapState } from "vuex";
 import Vue from "vue";
-import insertAtCursor from "../common/insertAtCursor";
+// import insertAtCursor from "../common/insertAtCursor";
 import { reverse } from "../messageHandel";
+
+import globalBus from "../globalBus";
 
 // import AlloyFinger from "alloyfinger/alloy_finger"; // 手势库
 // import AlloyFingerVue from "alloyfinger/vue/alloy_finger";
@@ -136,21 +138,22 @@ export default {
         this.persInfo = true;
       }
     },
-    appoint(name) {
-      if (this.dialogType == "message" || !name) {
+    appoint(item) {
+      if (this.dialogType == "message" || !item.name) {
         return;
       }
-      if (this.iPhone) {
-        insertAtCursor(
-          document.getElementById("chat-input"),
-          "@" + name + "  "
-        );
-      } else {
-        insertAtCursor(
-          document.getElementsByTagName("textarea")[0],
-          "@" + name + "  "
-        );
-      }
+      globalBus.$emit('appoint', "@" + item.name + "  ", item.sender_id);
+      // if (this.iPhone) {
+      //   insertAtCursor(
+      //     document.getElementById("chat-input"),
+      //     "@" + name + "  "
+      //   );
+      // } else {
+      //   insertAtCursor(
+      //     document.getElementsByTagName("textarea")[0],
+      //     "@" + name + "  "
+      //   );
+      // }
       // this.content = this.$refs.textarea.value;
     },
     mousedown(e, content) {
@@ -242,7 +245,6 @@ export default {
   watch: {
     curSession: {
       handler: function(value) {
-        console.log(this.groupInfoNum);
         //特别注意，不能用箭头函数，箭头函数，this指向全局
         if (value.type != "message") {
           this.$http
@@ -250,7 +252,6 @@ export default {
               "/omsIm/demo/json/getList.php?class=groupMembers&id=" + value.id
             )
             .then(res => {
-              console.log(this.groupInfoNum);
               this.groupInfoNum = res.data.data.list.length;
             })
             .catch(res => {});
@@ -359,7 +360,7 @@ Vue.directive("scroll-bottom", function(el, bind) {
             width="40"
             height="40"
             :src="item.self ? user.documentUrlOms + user.img : (item.img.indexOf('http') == -1 ? user.documentUrlOms  + item.img : item.img )"
-            @click="appoint(item.name)"
+            @click="appoint(item)"
           >
           <div v-if="dialogType == 'groupMessage' && !item.self" class="groupName">{{item.name}}</div>
 

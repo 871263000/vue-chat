@@ -238,14 +238,14 @@ export default {
                             this.$store.dispatch('revokeMes', {message_id: response.data.revoke[i].id});
                         }
                         // qpp 推送
-                        if (this.iPhone) {
-                            axios.ajax.get(appPushMessage + this.mesNum)
-                            .then((response) => {
-                            })
-                            .catch(function(response) {
-                                console.log(response)
-                            });
-                        }
+                        // if (this.iPhone) {
+                        //     axios.ajax.get(appPushMessage + this.mesNum)
+                        //     .then((response) => {
+                        //     })
+                        //     .catch(function(response) {
+                        //         console.log(response)
+                        //     });
+                        // }
                         
 
                     })
